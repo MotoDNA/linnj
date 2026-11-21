@@ -302,6 +302,33 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
 .D .vhero .tx{position:absolute;left:0;right:0;top:46%;transform:translateY(-50%);text-align:center;color:#FFFFFF}
 .D .vhero h1{margin:0;font-family:'Noto Serif KR',serif;font-weight:300;font-size:clamp(34px,5.4vw,72px);letter-spacing:.01em}
 .D .vhero p{margin:18px 0 0;font-size:15px;letter-spacing:.06em}
+/* 휴대폰: 메인 사진을 메뉴 아래에서 시작해 잘리지 않고 전체(3:2)가 보이게 */
+@media (max-width:600px){
+ .A .hero{height:auto;max-height:none;min-height:0;padding-top:calc(var(--hh,96px) + 66.667vw);background:#FFFFFF;color:#1C1A18}
+ .A .hero .sl{top:var(--hh,96px);bottom:auto;height:66.667vw}
+ .A .hero .sl.kb,.A .hero .sl.kb2{animation:none;transform:none}
+ .A .hero .shade{display:none}
+ .A .hdr.over{background:#FFFFFF;color:#1C1A18;border-bottom:1px solid #E3E0DA}
+ .A .hero .cap{position:static;padding-top:18px;padding-bottom:6px}
+ .A .hero h1{font-size:24px}
+ .A .hero .dots span{background:rgba(0,0,0,.22)}.A .hero .dots button[aria-current=true] span{background:#1C1A18}
+ .B .hero{height:auto;max-height:none;min-height:0;padding-top:calc(var(--hh,96px) + 66.667vw)}
+ .B .hero .bh{top:var(--hh,96px);bottom:auto;height:66.667vw}
+ .B .hdr.over{background:rgba(18,17,16,.96);border-bottom:1px solid #2E2B28}
+ .B .hero .txt{position:static;padding-top:22px;padding-bottom:6px}
+ .B .hero h1{font-size:28px}
+ .bh img{transform:none}.bh img.on{animation:none}.bh::after{display:none}
+ .D .vhero{height:auto;min-height:0;padding-top:calc(var(--hh,120px) + 66.667vw);background:#FFFFFF}
+ .D .vhero .bh{top:var(--hh,120px);bottom:auto;height:66.667vw}
+ .D .vhero .shade{display:none}
+ .D .hdr.over{background:#FFFFFF;color:#1C1A18}
+ .D .vhero .tx{position:static;transform:none;color:#1C1A18;padding:24px 20px 6px}
+ .D .vhero h1{font-size:30px}
+ .D .vhero p{margin-top:10px}
+ .C .split{min-height:0}
+ .C .split .pic{order:-1;flex:0 0 100%;min-height:0;aspect-ratio:3/2}
+}
+
 .D .vbtn{position:absolute;right:20px;bottom:20px;width:44px;height:44px;border-radius:22px;border:1px solid rgba(255,255,255,.7);background:transparent;color:#FFFFFF;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .D .mason{columns:3 300px;column-gap:24px}
 .mason>.tile{break-inside:avoid;margin:0 0 24px}
@@ -781,6 +808,9 @@ var V={a:A,b:B,c:C,d:D},bandState={a:'all',b:'all',c:'all',d:'all'},timer=null;
     ly=y;}
   window.addEventListener('scroll',onScroll,{passive:true});
 })();
+/* 휴대폰에서 메인 사진을 메뉴 높이만큼 아래에서 시작하게 메뉴 높이를 기억 */
+function setHH(){var app=document.getElementById('app'),h=app&&app.querySelector('.hero > .hdr, .vhero > .hdr');if(h)app.style.setProperty('--hh',h.offsetHeight+'px');}
+window.addEventListener('resize',setHH);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(setHH);
 function render(){
   clearInterval(timer);
   var h=(location.hash||'').replace('#','');
@@ -798,6 +828,7 @@ function render(){
     document.title='Linn & J — 시안 '+v.toUpperCase();
   }
   app.innerHTML=html;
+  setHH();
   (function(){var hd=app.querySelector('header'),st=hd&&getComputedStyle(hd).position==='sticky';document.documentElement.style.scrollPaddingTop=(st?hd.offsetHeight:0)+'px';})();
   document.body.style.background=v==='b'?'#121110':((v==='a'||v==='c'||v==='d')?'#FFFFFF':'#F2F0EB');
   var dv=document.getElementById('dvid'),db=document.getElementById('dvbtn');if(dv&&db){db.addEventListener('click',function(){if(dv.paused){dv.play();db.setAttribute('aria-label','영상 일시정지');}else{dv.pause();db.setAttribute('aria-label','영상 재생');}});}
