@@ -549,7 +549,7 @@ function draw(){
   else b.scrollTop=0;
 }
 function route(){var h=(location.hash||'#home').slice(1);if(!V[h])h='home';if(h!==VIEW)EDIT=null;VIEW=h;TARGET=null;draw();}
-function segV(){$('#vseg').innerHTML=['a','b','c','d'].map(function(v){return '<button type="button" data-v="'+v+'" aria-pressed="'+(VAR===v)+'">'+v.toUpperCase()+'</button>';}).join('');}
+function segV(){$('#vseg').innerHTML=['a','b','bw','c','d'].map(function(v){return '<button type="button" data-v="'+v+'" aria-pressed="'+(VAR===v)+'">'+({b:'B-K',bw:'B-W'}[v]||v.toUpperCase())+'</button>';}).join('');}
 
 /* ---------- 시작 ---------- */
 function start(){
