@@ -231,6 +231,12 @@ form textarea{padding:10px 0;resize:vertical}
 .B{background:#121110;color:#ECE8E1;min-height:100vh}
 .B .hdr{position:sticky;top:0;z-index:20;background:rgba(18,17,16,.92);border-bottom:1px solid #2E2B28}
 .B .hdr.over{position:absolute;left:0;right:0;background:transparent;border:0}
+/* 시안 B: 아래로 스크롤하면 메뉴가 숨고, 위로 올리면 다시 나타남 */
+.B .hdr{transition:transform .35s ease,background-color .3s ease}
+.B .hdr.over{position:fixed;top:0}
+.B .hdr.over.solid{background:rgba(18,17,16,.92);border-bottom:1px solid #2E2B28}
+.B .hdr.hide{transform:translateY(-100%)}
+@media (prefers-reduced-motion:reduce){.B .hdr{transition:none}}
 .B .hero{position:relative;height:94vh;max-height:1300px;min-height:520px}
 .B .hero .lt{position:absolute;inset:0;aspect-ratio:auto;height:100%}
 .B .hero .txt{position:absolute;left:0;right:0;bottom:40px;pointer-events:none}
@@ -751,6 +757,15 @@ function landing(){
 
 /* ================= router ================= */
 var V={a:A,b:B,c:C,d:D},bandState={a:'all',b:'all',c:'all',d:'all'},timer=null;
+(function(){var ly=0;
+  function onScroll(){var hd=document.querySelector('.B .hdr');var y=window.scrollY||0;
+    if(hd){var dy=y-ly;
+      if(y<80||dy<-4)hd.classList.remove('hide');
+      else if(dy>4&&!hd.contains(document.activeElement))hd.classList.add('hide');
+      hd.classList.toggle('solid',y>40);}
+    ly=y;}
+  window.addEventListener('scroll',onScroll,{passive:true});
+})();
 function render(){
   clearInterval(timer);
   var h=(location.hash||'').replace('#','');
