@@ -158,7 +158,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid #C9AE84;outline-offset
   <div class="box">
     <h1>LINN &amp; J</h1>
     <p>홈페이지 관리자</p>
-    <div class="note"><b>시안 단계 연습 모드</b><br>지금 고친 내용은 이 기기의 브라우저에만 저장되고, 같은 브라우저로 연 시안 페이지에 바로 나타납니다. 실제 홈페이지를 열면 비밀번호로 로그인하고, 저장한 내용이 모든 방문자에게 보입니다.</div>
+    <div class="note" id="loginNote"><b>시안 단계 연습 모드</b><br>지금 고친 내용은 이 기기의 브라우저에만 저장되고, 같은 브라우저로 연 시안 페이지에 바로 나타납니다. 실제 홈페이지를 열면 비밀번호로 로그인하고, 저장한 내용이 모든 방문자에게 보입니다.</div>
     <form id="pwForm" novalidate style="margin-top:22px">
       <p id="pwMsg" style="margin:0 0 4px;color:#1C1A18;font-size:15px">비밀번호를 입력해 주세요.</p>
       <div class="f"><label for="pw1" id="pw1L">비밀번호</label><input type="password" id="pw1" autocomplete="current-password" style="width:100%"></div>
@@ -175,7 +175,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid #C9AE84;outline-offset
   <aside class="side">
     <div class="brand"><b>LINN &amp; J</b><span>홈페이지 관리자</span></div>
     <nav class="nav" id="nav" aria-label="관리 메뉴"></nav>
-    <div class="foot">연습 모드 · 이 브라우저에만 저장<br><a href="index.html#a" target="_blank" rel="noopener">홈페이지 새 창으로 보기 ↗</a></div>
+    <div class="foot" id="sideFoot">연습 모드 · 이 브라우저에만 저장<br><a href="index.html#a" target="_blank" rel="noopener">홈페이지 새 창으로 보기 ↗</a></div>
   </aside>
 
   <section class="main">
@@ -212,7 +212,20 @@ input:focus,textarea:focus,select:focus{outline:2px solid #C9AE84;outline-offset
 (function(){
 'use strict';
 var KEY='lj_admin_content',INBOX='lj_admin_inbox',HIST='lj_admin_hist';
-var PWK='lj_admin_pw',PRACTICE=true;
+var PWK='lj_admin_pw';
+/* 실제 홈페이지(linnj.kr)에서는 서버(구글 Apps Script)에 저장. 시안(그 밖의 주소)에서는 연습 모드 */
+var API=/(^|\.)linnj\.kr$/.test(location.hostname)?'https://script.google.com/macros/s/AKfycbz8hf3-6WhoUjUJQCBb_QuaozmXiesuBNwKEUjZa4GpgmEru5mzTYEhE2O5ZWWIXnYntA/exec':'';
+var PRACTICE=!API,PW='',INB=[],HISTS=[],LOADED=false;
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+function api(body,tries){tries=tries||3;body.password=PW;
+  return fetch(API,{method:'POST',body:JSON.stringify(body)}).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();})
+   .catch(function(e){if(tries>1)return sleep(700).then(function(){return api(body,tries-1);});throw e;});}
+function apiGet(tries){tries=tries||4;
+  return fetch(API+'?action=content&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();})
+   .catch(function(e){if(tries>1)return sleep(600).then(function(){return apiGet(tries-1);});throw e;});}
+function inb(){return PRACTICE?(lsGet(INBOX)||[]):INB;}
+function loadInbox(){if(PRACTICE)return Promise.resolve();return api({action:'inbox'}).then(function(j){if(j.ok){INB=j.items;navBadge();}});}
+function loadHist(){if(PRACTICE)return Promise.resolve();return api({action:'history'}).then(function(j){if(j.ok)HISTS=j.items;});}
 var $=function(s,r){return (r||document).querySelector(s);};
 function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function clone(o){return JSON.parse(JSON.stringify(o));}
@@ -280,9 +293,21 @@ function validate(){
     if(!w.cover)e.push((w.name||(i+1)+'번째 현장')+'의 대표 사진을 넣어 주세요.');
   });return e;
 }
-function save(){
+function save(note){
   var e=validate();
   if(e.length){showErr(e);return;}
+  if(!PRACTICE){
+    if(!LOADED){showErr(['홈페이지 내용을 아직 불러오지 못했어요. 새로 고침한 뒤 다시 저장해 주세요.']);return;}
+    var bt=$('#save');bt.disabled=true;bt.textContent='저장하는 중…';
+    var c=clone(DRAFT);delete c.updated;
+    api({action:'save',content:c,note:typeof note==='string'?note:'저장'}).then(function(j){
+      bt.textContent='저장하기';
+      if(!j.ok){updBar();showErr([j.error||'저장하지 못했어요.']);if(/비밀번호/.test(j.error||''))relogin();return;}
+      var old=$('#errbox');if(old)old.remove();
+      SAVED=clone(DRAFT);updBar();toast('저장했어요. 홈페이지에 바로 나타납니다.');loadHist().then(function(){if(VIEW==='home')draw();});
+    }).catch(function(){bt.textContent='저장하기';updBar();showErr(['인터넷 연결이 불안정해서 저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.']);});
+    return;
+  }
   var hist=lsGet(HIST)||[];var prevC=clone(SAVED);delete prevC.up;
   var c=clone(DRAFT);
   if(!lsSet(KEY,c)){showErr(['저장 공간이 가득 찼어요. 연습 모드는 브라우저에 사진을 저장해서 용량이 작아요. 올린 사진 몇 장을 지우고 다시 저장해 주세요.']);return;}
@@ -334,10 +359,16 @@ function openPrevIfSmall(){if(window.innerWidth<=1100)$('#prev').classList.add('
 function readPhoto(file,cb){
   if(!/^image\//.test(file.type)){toast('사진 파일만 올릴 수 있어요.');return;}
   var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){
-    var M=1600,w=im.naturalWidth,h=im.naturalHeight,s=Math.min(1,M/Math.max(w,h)),c=document.createElement('canvas');
+    var M=PRACTICE?1600:2000,w=im.naturalWidth,h=im.naturalHeight,s=Math.min(1,M/Math.max(w,h)),c=document.createElement('canvas');
     c.width=Math.round(w*s);c.height=Math.round(h*s);var x=c.getContext('2d');x.fillStyle='#FFF';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
     var key='up'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-    DRAFT.up=DRAFT.up||{};DRAFT.dim=DRAFT.dim||{};DRAFT.up[key]=c.toDataURL('image/jpeg',.82);DRAFT.dim[key]=Math.round(h/w*1000)/1000;cb(key);
+    var du=c.toDataURL('image/jpeg',.85);
+    if(PRACTICE){DRAFT.up=DRAFT.up||{};DRAFT.dim=DRAFT.dim||{};DRAFT.up[key]=du;DRAFT.dim[key]=Math.round(h/w*1000)/1000;cb(key);return;}
+    toast('사진을 올리는 중이에요…');
+    api({action:'upload',name:(file.name||key).replace(/\.[^.]+$/,'')+'.jpg',mime:'image/jpeg',data:du.split(',')[1]},2).then(function(j){
+      if(!j.ok){toast(j.error||'사진을 올리지 못했어요.');return;}
+      DRAFT.up=DRAFT.up||{};DRAFT.dim=DRAFT.dim||{};DRAFT.up[key]='https://drive.google.com/thumbnail?id='+j.id+'&sz=w2000';DRAFT.dim[key]=Math.round(h/w*1000)/1000;cb(key);
+    }).catch(function(){toast('인터넷 연결이 불안정해서 사진을 올리지 못했어요.');});
   };im.onerror=function(){toast('사진을 읽지 못했어요. 다른 사진으로 해 주세요.');};im.src=r.result;};r.readAsDataURL(file);
 }
 
@@ -345,7 +376,7 @@ function readPhoto(file,cb){
 var V={};
 
 V.home=function(b){
-  var inbox=lsGet(INBOX)||[],nd=inbox.filter(function(x){return !x.done;}).length,hist=lsGet(HIST)||[];
+  var inbox=inb(),nd=inbox.filter(function(x){return !x.done;}).length,hist=PRACTICE?(lsGet(HIST)||[]):HISTS.map(function(h){return {at:h.time,note:h.note};});
   b.innerHTML='<div class="stats"><div class="stat"><b>'+works().length+'</b><span>포트폴리오 현장</span></div><div class="stat"><b>'+nd+'</b><span>처리 안 한 상담 신청</span></div><div class="stat"><b>'+Object.keys(SAVED.tx||{}).length+'</b><span>바꾼 문구</span></div><div class="stat"><b>'+hist.length+'</b><span>저장 기록</span></div></div>'+
   '<div class="card" style="margin-top:16px"><h3>자주 하는 일</h3><div class="row" style="margin-top:10px"><a class="btn" href="#works">새 현장 올리기</a><a class="btn" href="#contact">상담 신청 확인</a><a class="btn" href="#about">회사 소개 고치기</a></div></div>'+
   '<div class="card"><h3>저장 기록</h3><p class="hint">저장할 때마다 바로 전 상태를 남겨 둡니다. 잘못 고쳤다면 원하는 때로 되돌릴 수 있어요.</p>'+
@@ -353,6 +384,8 @@ V.home=function(b){
   '<div class="card"><h3>여기서 고칠 수 없는 것</h3><p class="hint" style="margin:0">색·글꼴·배치, 메뉴 구성, 조명 켜짐/꺼짐 사진 짝, 공사 전후 비교 사진, 첫 화면 영상은 제작사(디엔에이랩스)에 수정 요청해 주세요.</p></div>';
   b.querySelectorAll('[data-rs]').forEach(function(x){x.addEventListener('click',function(){
     if(!confirm('이 때의 내용으로 되돌리고 저장할까요? 지금 내용은 저장 기록에 남습니다.'))return;
+    if(!PRACTICE){api({action:'restore',time:hist[+x.dataset.rs].at}).then(function(j){if(!j.ok){showErr([j.error||'되돌리지 못했어요.']);return;}
+      apiGet().then(function(c){delete c.updated;SAVED=c;DRAFT=clone(c);loadHist().then(function(){draw();preview(true);toast('되돌렸어요.');});});});return;}
     var h=hist[+x.dataset.rs].c,up=Object.assign({},SAVED.up||{},DRAFT.up||{}),dim=Object.assign({},SAVED.dim||{},DRAFT.dim||{});
     DRAFT=clone(h);DRAFT.up=up;DRAFT.dim=dim;save();preview(true);draw();
   });});
@@ -428,7 +461,7 @@ function workEdit(b){
 
 V.contact=function(b){
   function draw2(){
-    var inbox=lsGet(INBOX)||[];
+    var inbox=inb();
     b.innerHTML=chips([['Contact 페이지','contact',''],['맨 아래 회사 정보','','footer']])+
     '<div class="card"><h3>연락처</h3><p class="hint">맨 아래 회사 정보와 시안 D의 상담문의 페이지에 나옵니다.</p>'+txField('phone')+txField('email')+txField('addr')+'</div>'+
     '<div class="card"><h3>상담 안내 문구</h3><p class="hint">Contact 페이지 제목 아래, 메인 아래쪽 상담 버튼 위에 나옵니다.</p>'+txField('cta')+'</div>'+
@@ -438,10 +471,10 @@ V.contact=function(b){
       return '<div class="inb'+(x.done?' done':'')+'"><div class="h"><b>'+esc(d.nm||'(이름 없음)')+'</b><span style="font-size:13px;color:#6B6358">'+new Date(x.at).toLocaleString('ko-KR')+(d.src?' · '+esc(d.src):'')+'</span></div><dl>'+r('연락처',d.ph)+r('통화 가능',d.ct)+r('단지명',d.apt)+r('평형',d.py)+r('희망 시기',d.wh)+r('예산',d.bd)+r('메시지',d.ms)+r('마케팅 동의',d.agM===undefined?'':(d.agM?'동의':'동의 안 함'))+'</dl>'+
       '<div class="row" style="margin-top:10px;justify-content:space-between">'+(d.ph?'<a class="btn sm" href="tel:'+esc(String(d.ph).replace(/[^\d+]/g,''))+'">전화 걸기</a>':'<span></span>')+'<div class="row"><label class="chk"><input type="checkbox" data-done="'+i+'"'+(x.done?' checked':'')+'> 처리 완료</label><button class="btn sm del" type="button" data-del="'+i+'">삭제</button></div></div></div>';}).join(''):'<div class="empty">아직 들어온 상담 신청이 없어요.<br>시안의 상담 폼에서 신청해 보면 여기에 쌓입니다.</div>')+'</div></div>';
     wireTx(b);wireChips(b);
-    b.querySelectorAll('[data-done]').forEach(function(x){x.addEventListener('change',function(){var ib=lsGet(INBOX)||[];ib[+x.dataset.done].done=x.checked;lsSet(INBOX,ib);draw2();navBadge();});});
-    b.querySelectorAll('[data-del]').forEach(function(x){x.addEventListener('click',function(){if(!confirm('이 상담 신청을 삭제할까요? 되돌릴 수 없어요.'))return;var ib=lsGet(INBOX)||[];ib.splice(+x.dataset.del,1);lsSet(INBOX,ib);draw2();navBadge();});});
+    b.querySelectorAll('[data-done]').forEach(function(x){x.addEventListener('change',function(){if(!PRACTICE){var it=INB[+x.dataset.done];it.done=x.checked;draw2();navBadge();api({action:'inboxDone',id:it.id,done:x.checked}).then(function(j){if(!j.ok)toast(j.error||'저장하지 못했어요.');});return;}var ib=lsGet(INBOX)||[];ib[+x.dataset.done].done=x.checked;lsSet(INBOX,ib);draw2();navBadge();});});
+    b.querySelectorAll('[data-del]').forEach(function(x){x.addEventListener('click',function(){if(!confirm('이 상담 신청을 삭제할까요? 되돌릴 수 없어요.'))return;if(!PRACTICE){var it=INB[+x.dataset.del];api({action:'inboxDel',id:it.id}).then(function(j){if(!j.ok){toast(j.error||'삭제하지 못했어요.');return;}INB.splice(INB.indexOf(it),1);draw2();navBadge();});return;}var ib=lsGet(INBOX)||[];ib.splice(+x.dataset.del,1);lsSet(INBOX,ib);draw2();navBadge();});});
   }
-  draw2();where('contact','');
+  draw2();where('contact','');if(!PRACTICE)loadInbox().then(function(){if(VIEW==='contact')draw2();});
 };
 
 function linkView(b,key,label,hint,ph){
@@ -485,10 +518,11 @@ V.pw=function(b){
    '<div class="row" style="margin-top:14px"><button class="btn pri" type="submit">비밀번호 바꾸기</button></div></form></div>';
   b.querySelector('#cpw').addEventListener('submit',function(e){e.preventDefault();
     var p0=b.querySelector('#cp0').value,p1=b.querySelector('#cp1').value,p2=b.querySelector('#cp2').value,er=b.querySelector('#cpErr');
-    pwCheck(p0).then(function(ok){
+    (PRACTICE?pwCheck(p0):Promise.resolve(p0===PW)).then(function(ok){
       if(!ok){er.textContent='지금 비밀번호가 맞지 않아요.';b.querySelector('#cp0').focus();return;}
       if(p1.length<8){er.textContent='새 비밀번호는 8자 이상으로 정해 주세요.';b.querySelector('#cp1').focus();return;}
       if(p1!==p2){er.textContent='새 비밀번호 두 칸이 서로 달라요.';b.querySelector('#cp2').focus();return;}
+      if(!PRACTICE){api({action:'setpw',newPassword:p1}).then(function(j){if(!j.ok){er.textContent=j.error||'바꾸지 못했어요.';return;}PW=p1;try{sessionStorage.setItem('lj_pw',p1);}catch(e){}er.textContent='';b.querySelector('#cpw').reset();toast('비밀번호를 바꿨어요');}).catch(function(){er.textContent='인터넷 연결이 불안정해요. 다시 눌러 주세요.';});return;}
       pwSet(p1).then(function(){er.textContent='';b.querySelector('#cpw').reset();toast('비밀번호를 바꿨어요');});
     });
   });
@@ -496,7 +530,7 @@ V.pw=function(b){
 };
 
 /* ---------- 그리기 ---------- */
-function navBadge(){var n=(lsGet(INBOX)||[]).filter(function(x){return !x.done;}).length,a=$('#nav a[href="#contact"] .badge');if(a){a.textContent=n;a.classList.toggle('hide',!n);}}
+function navBadge(){var n=inb().filter(function(x){return !x.done;}).length,a=$('#nav a[href="#contact"] .badge');if(a){a.textContent=n;a.classList.toggle('hide',!n);}}
 function drawNav(){
   $('#nav').innerHTML=MENU.map(function(m){if(m[0]==='cap')return '<div class="cap">'+m[1]+'</div>';
     return '<a href="#'+m[0]+'"'+(VIEW===m[0]?' aria-current="page"':'')+'><span>'+m[1]+'</span>'+(m[0]==='contact'?'<span class="badge hide">0</span>':'')+'</a>';}).join('');
@@ -519,7 +553,12 @@ function segV(){$('#vseg').innerHTML=['a','b','c','d'].map(function(v){return '<
 
 /* ---------- 시작 ---------- */
 function start(){
-  SAVED=lsGet(KEY)||{};DRAFT=clone(SAVED);
+  if(PRACTICE){SAVED=lsGet(KEY)||{};LOADED=true;}
+  else{SAVED={};$('#body').innerHTML='<div class="empty">홈페이지 내용을 불러오는 중…</div>';
+    apiGet().then(function(c){delete c.updated;SAVED=c;DRAFT=clone(SAVED);LOADED=true;draw();preview(true);})
+     .catch(function(){showErr(['홈페이지 내용을 불러오지 못했어요. 인터넷 연결을 확인하고 새로 고침해 주세요. (불러오기 전에는 저장할 수 없어요)']);});
+    loadInbox();loadHist().then(function(){if(VIEW==='home'&&LOADED)draw();});}
+  DRAFT=clone(SAVED);
   segV();
   $('#vseg').addEventListener('click',function(e){var x=e.target.closest('[data-v]');if(!x)return;VAR=x.dataset.v;segV();preview(true);});
   $('#dseg').addEventListener('click',function(e){var x=e.target.closest('[data-d]');if(!x)return;DEV=x.dataset.d;$('#dseg').querySelectorAll('button').forEach(function(y){y.setAttribute('aria-pressed',y===x);});fitFrame();});
@@ -548,8 +587,10 @@ function sha(t){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(t
 function pwGet(){return lsGet(PWK);}
 function pwCheck(p){var r=pwGet();if(!r)return Promise.resolve(false);return sha(r.s+':'+p).then(function(h){return h===r.h;});}
 function pwSet(p){var s=Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(12)),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');return sha(s+':'+p).then(function(h){lsSet(PWK,{s:s,h:h});});}
+function relogin(){try{sessionStorage.removeItem('lj_pw');}catch(e){}toast('다시 로그인해 주세요.');setTimeout(function(){location.reload();},1200);}
 (function(){
-  var f=$('#pwForm'),setup=!pwGet(),er=$('#pwErr');
+  var f=$('#pwForm'),setup=PRACTICE&&!pwGet(),er=$('#pwErr');
+  if(!PRACTICE){$('#loginNote').innerHTML='저장하면 홈페이지(linnj.kr)에 바로 반영됩니다. 처음 비밀번호는 제작사에서 받으신 것을 넣고, 들어간 뒤 <b>비밀번호 설정</b>에서 바꿔 주세요.';$('#sideFoot').firstChild.textContent='저장하면 홈페이지에 바로 반영';}
   if(setup){$('#pwMsg').textContent='처음 들어오셨어요. 관리자 비밀번호를 정해 주세요. (8자 이상)';$('#pw1L').textContent='새 비밀번호';$('#pw1').setAttribute('autocomplete','new-password');$('#pw2Row').hidden=false;$('#enter').textContent='비밀번호 정하고 들어가기';}
   f.addEventListener('submit',function(e){e.preventDefault();
     var p1=$('#pw1').value,lk=lsGet(PWK+'_lock')||{n:0,t:0};
@@ -558,6 +599,11 @@ function pwSet(p){var s=Array.prototype.map.call(crypto.getRandomValues(new Uint
       if(p1!==$('#pw2').value){er.textContent='두 칸의 비밀번호가 서로 달라요.';$('#pw2').focus();return;}
       pwSet(p1).then(boot);return;
     }
+    if(!PRACTICE){var bt=$('#enter');bt.disabled=true;bt.textContent='확인하는 중…';
+      PW=p1;api({action:'login'}).then(function(j){bt.disabled=false;bt.textContent='관리자 페이지 들어가기';
+        if(j.ok){try{sessionStorage.setItem('lj_pw',p1);}catch(e){}boot();}else{er.textContent=j.error||'들어가지 못했어요.';$('#pw1').select();}})
+       .catch(function(){bt.disabled=false;bt.textContent='관리자 페이지 들어가기';er.textContent='서버에 연결하지 못했어요. 잠시 뒤 다시 해 주세요.';});
+      return;}
     if(lk.t>Date.now()){er.textContent='비밀번호를 여러 번 틀려서 잠시 잠겼어요. '+Math.ceil((lk.t-Date.now())/60000)+'분 뒤에 다시 해 주세요.';return;}
     pwCheck(p1).then(function(ok){
       if(ok){localStorage.removeItem(PWK+'_lock');boot();return;}
@@ -567,7 +613,7 @@ function pwSet(p){var s=Array.prototype.map.call(crypto.getRandomValues(new Uint
   });
   setTimeout(function(){$('#pw1').focus();},50);
 })();
-try{if(sessionStorage.getItem('lj_admin_in')&&pwGet())boot();}catch(e){}
+try{if(PRACTICE){if(sessionStorage.getItem('lj_admin_in')&&pwGet())boot();}else if(sessionStorage.getItem('lj_pw')){PW=sessionStorage.getItem('lj_pw');boot();}}catch(e){}
 })();
 </script>
 </body>

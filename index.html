@@ -517,7 +517,7 @@ function wire(root){
       d.src='시안 '+vv+' 상담 페이지';
       d.agP=true;d.agM=!!(f.querySelector('#agM')&&f.querySelector('#agM').checked);
       if(!d.nm||!d.ph){var mi=f.querySelector(d.nm?'#ph':'#nm');mi.focus();mi.setAttribute('aria-invalid','true');var em=f.querySelector('.ferr');if(!em){em=document.createElement('p');em.className='ferr';em.setAttribute('role','alert');em.style.cssText='color:#C0392B;font-size:14px;margin:14px 0 0';f.appendChild(em);}em.textContent='성함과 연락처를 적어 주세요.';return;}
-      if(!PREVIEW){var ib=lsGet(LJ_INBOX)||[];ib.unshift({at:new Date().toISOString(),d:d,done:false});lsSet(LJ_INBOX,ib.slice(0,200));}
+      if(!PREVIEW&&!API_URL){var ib=lsGet(LJ_INBOX)||[];ib.unshift({at:new Date().toISOString(),d:d,done:false});lsSet(LJ_INBOX,ib.slice(0,200));}
       function done(){f.innerHTML='<p style="font-size:22px;margin:40px 0 0">접수되었습니다. 담당 디자이너가 곧 연락드리겠습니다.</p>'+(API_URL?'':'<p style="margin:40px 0 14px;font-size:14px;opacity:.75">대표님 카카오톡에는 이렇게 도착합니다 (예시 · 실제로 전송되지는 않습니다)</p>'+notifyCard(d));}
       if(!API_URL||PREVIEW){done();return;}
       var bt=f.querySelector('button[type=submit]'),bl=bt?bt.textContent:'';if(bt){bt.disabled=true;bt.textContent='보내는 중…';}
@@ -531,8 +531,8 @@ function wire(root){
 }
 
 /* ---- shared pieces ---- */
-/* 상담 접수 서버(구글 Apps Script) 주소. 비어 있으면 예시 모드(브라우저에만 저장) */
-var API_URL='';
+/* 홈페이지 서버(구글 Apps Script) 주소. 실제 홈페이지(linnj.kr)에서만 사용, 시안에서는 예시 모드(브라우저에만 저장) */
+var API_URL=/(^|\.)linnj\.kr$/.test(location.hostname)?'https://script.google.com/macros/s/AKfycbz8hf3-6WhoUjUJQCBb_QuaozmXiesuBNwKEUjZa4GpgmEru5mzTYEhE2O5ZWWIXnYntA/exec':'';
 var YT='https://www.youtube.com/@LinnJ인테리어스튜디오',BLOG='https://blog.naver.com/jcat107';
 function ext(u,t){return '<a class="tap" href="'+u+'" target="_blank" rel="noopener">'+t+'</a>';}
 function hdr(v,cur,over){
@@ -882,9 +882,19 @@ function render(){
   }
 }
 window.addEventListener('hashchange',function(){render();window.scrollTo(0,0);});
-applyContent(PREVIEW?{}:(lsGet(LJ_KEY)||{}));
-if(!PREVIEW)window.addEventListener('storage',function(e){if(e.key===LJ_KEY){applyContent(lsGet(LJ_KEY)||{});render();}});
-render();
+if(PREVIEW||!API_URL){
+  applyContent(PREVIEW?{}:(lsGet(LJ_KEY)||{}));
+  if(!PREVIEW)window.addEventListener('storage',function(e){if(e.key===LJ_KEY){applyContent(lsGet(LJ_KEY)||{});render();}});
+  render();
+}else{
+  /* 관리자에서 저장한 최신 내용을 서버에서 받아 그림. 예전 내용이 잠깐 보이지 않도록 받을 때까지 기다림(최대 3.5초) */
+  (function(){var LJ_CACHE='lj_site_cache',shown='',first=true;
+    function show(c){var t=JSON.stringify(c||{});if(t===shown)return;shown=t;applyContent(JSON.parse(t));render();if(!first)return;first=false;}
+    function get(n){return fetch(API_URL+'?action=content').then(function(r){if(!r.ok)throw 0;return r.json();}).catch(function(e){if(n>1)return new Promise(function(r){setTimeout(r,600);}).then(function(){return get(n-1);});throw e;});}
+    var to=setTimeout(function(){if(first)show(lsGet(LJ_CACHE)||{});},3500);
+    get(4).then(function(c){clearTimeout(to);lsSet(LJ_CACHE,c);show(c);}).catch(function(){clearTimeout(to);if(first)show(lsGet(LJ_CACHE)||{});});
+  })();
+}
 </script>
 </body>
 </html>
