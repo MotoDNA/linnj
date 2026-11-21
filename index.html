@@ -241,6 +241,12 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
 @media (prefers-reduced-motion:reduce){.B .hdr{transition:none}}
 .B .hero{position:relative;height:94vh;max-height:1300px;min-height:520px}
 .B .hero .lt{position:absolute;inset:0;aspect-ratio:auto;height:100%}
+.B .bh{position:absolute;inset:0;overflow:hidden;background:#121110}
+.B .bh img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease;transform:scale(1.02)}
+.B .bh img.on{opacity:1;animation:bhz 3.6s ease-out both}
+@keyframes bhz{from{transform:scale(1.08)}to{transform:scale(1.02)}}
+.B .bh::after{content:'';position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,0) 30%,rgba(0,0,0,0) 55%,rgba(0,0,0,.55));pointer-events:none}
+@media (prefers-reduced-motion:reduce){.B .bh img.on{animation:none}}
 .B .hero .txt{position:absolute;left:0;right:0;bottom:40px;pointer-events:none}
 .B .hero h1{margin:0;font-size:clamp(34px,5vw,64px);font-weight:300;line-height:1.3}
 .B .muted{color:#A39A8E}
@@ -489,6 +495,11 @@ function hdr(v,cur,over){
   return '<header class="hdr'+(over?' over':'')+'"><div class="in wrap"><a class="logo tap" href="#'+v+'" aria-label="Linn &amp; J 홈">'+LJ(46)+'</a><nav aria-label="주 메뉴">'+l(v,'ABOUT','home')+l(v+'-works','WORKS','works')+l(v+'-contact','CONTACT','contact')+ext(YT,'YOUTUBE')+ext(BLOG,'BLOG')+'</nav></div></header>';
 }
 function hasTx(k){var v=(CT.tx&&CT.tx[k]!=null&&CT.tx[k]!=='')?CT.tx[k]:TX[k].d;return !!v&&!/^\[.*\]$/.test(v);}
+/* 시안 B 첫 화면: 현장별 공용부·주방 사진 17장을 들어올 때마다 섞어서 2.5초마다 바꿔 보여 줌 */
+var BH=['b01','b03','b04','b05','b06','b07','b08','b09','b10','b11','b12','b13','b14','b15','b16','b17','b18'],BHQ=[];
+function bhSrc(k){return 'src="img/bh/'+k+'-m.jpg" srcset="img/bh/'+k+'-m.jpg 1280w, img/bh/'+k+'.jpg 2400w" sizes="100vw"';}
+function bhero(){BHQ=BH.slice();for(var i=BHQ.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=BHQ[i];BHQ[i]=BHQ[j];BHQ[j]=t;}
+  return '<div class="bh"><img class="on" alt="린앤제이 시공 사진" '+bhSrc(BHQ[0])+' fetchpriority="high"><img alt="" aria-hidden="true"></div>';}
 function foot(){return '<footer class="wrap"><div style="margin-bottom:6px">'+LJ(39)+'</div><div class="biz"><span>상호 린하우징&amp;제이 (린앤제이 인테리어 스튜디오)</span><span>대표 '+tx('ceo')+'</span><span>사업자등록번호 '+tx('biz')+'</span></div><div class="biz"><span>'+tx('addr')+'</span><span>T. <a href="tel:'+tx('phone').replace(/[^0-9]/g,'')+'">'+tx('phone')+'</a></span>'+(hasTx('email')?'<span>E. '+tx('email')+'</span>':'')+'</div><div class="biz" style="opacity:.75"><span>© '+new Date().getFullYear()+' Linn &amp; J Design Studio. All rights reserved.</span></div><div style="margin-top:8px">'+ext(YT,'YOUTUBE')+' &nbsp; '+ext(BLOG,'BLOG')+'</div></footer>';}
 var DIM={"c001":0.667,"c003":0.667,"c006":0.667,"c007":0.667,"c008":0.667,"c009":0.667,"c010":1.499,"c011":1.499,"c012":0.667,"c013":0.667,"c014":0.667,"c015":0.667,"c016":0.667,"c017":0.667,"c018":0.667,"c019":0.667,"c020":0.667,"c021":0.667,"c022":0.667,"c023":0.667,"c024":0.667,"c025":1.499,"c026":1.499,"c027":1.499,"c028":1.499,"c030":0.667,"c031":0.667,"c032":0.667,"c033":1.499,"c034":0.751,"c035":1.499,"c036":1.499,"c037":1.333,"c038":1.499,"c039":0.667,"c041":0.751,"c042":0.667,"c044":0.667,"c045":0.667,"c046":0.667,"c047":1.333,"c048":1.341,"c049":1.499,"c050":1.499,"c051":0.751,"c052":0.751,"g001":0.667,"g002":0.667,"g003":0.667,"g004":0.751,"g005":1.333,"g006":1.333,"g007":1.333,"g008":0.667,"g010":0.667,"g014":0.667,"g015":0.667,"g016":0.667,"g017":0.667,"g018":1.499,"g019":1.499,"g020":0.667,"g021":0.667,"g022":0.667,"g024":0.667,"g025":0.667,"g026":0.667,"g027":0.667,"g028":0.667,"g029":0.667,"g030":0.667,"g031":0.667,"g032":0.667,"g033":0.667,"g034":0.667,"g035":0.667,"g036":0.667,"g037":0.667,"g038":0.667,"g039":0.667,"g040":0.667,"g041":1.499,"g042":0.667,"g043":1.499,"g045":1.5,"g046":1.5,"g047":1.5,"g048":1.5,"g049":1.5,"g050":1.5,"g051":1.5,"g052":1.5,"g053":1.5,"g054":1.5,"g055":1.5,"g056":1.5,"g057":1.5,"g058":1.5,"g059":1.5,"g060":1.5,"g061":1.5,"g062":1.5,"g063":1.5,"g064":1.498,"g065":1.5,"g066":1.498,"m221":0.667,"m223":0.667,"m225":0.667,"m227":0.667,"m229":0.667,"m235":1.499,"m237":0.667,"m239":0.667,"m243":1.499,"m247":0.667,"m249":0.667,"m251":1.499,"m253":1.499,"m255":0.667,"m257":0.667,"m259":0.667,"m261":0.667,"m265":1.499,"m271":0.667,"m273":0.667,"m283":1.499,"m285":1.499,"m289":0.667,"m297":1.499,"m305":1.499,"m93":0.667,"m94":0.75,"u194":0.667,"u200":0.667,"u218":0.667,"u224":0.667,"u232":0.667,"u238":0.667,"u248":0.667,"u254":0.667,"u268":0.667,"u272":0.667,"u278":0.667,"u292":1.499,"u298":0.667,"u306":1.499,"u318":1.5,"u324":0.667,"w183":0.751,"w189":0.667,"w191":0.667,"w193":0.667,"w195":0.667,"w201":0.667,"w205":0.667,"w207":0.667,"w211":0.667,"w213":0.667,"w225":0.667,"w229":0.667,"w231":0.667,"w235":0.751,"w239":1.499,"w241":1.499,"w243":1.499,"w255":0.667,"w257":0.667,"w259":0.667,"w261":0.667,"w269":1.499,"w271":1.499,"w279":1.499,"w287":1.499,"w289":1.499,"z003":0.751,"z004":0.667,"z005":0.667,"z006":0.667,"z007":0.667,"z008":0.667,"z009":0.667,"z010":0.667,"z011":0.667,"z012":0.667,"z013":0.667,"z014":0.667,"z015":0.667,"z016":0.667,"z017":0.667,"z018":0.667,"z019":0.667,"z022":0.667,"z023":0.667,"z024":0.667,"z025":0.667,"z026":0.667,"z027":0.667,"z028":1.266,"z029":1.499,"z031":1.499,"z032":1.499,"z034":1.499,"z039":1.254,"z040":1.241,"z041":0.667,"z043":1.499,"z044":0.667,"z045":0.667,"z046":1.499,"z047":1.499,"z050":0.667,"z051":1.499,"z054":1.499,"z055":0.667,"z056":0.667,"z057":0.667,"z058":0.667,"z059":0.667,"z061":1.499,"z063":1.499,"z065":1.499,"z066":0.667,"z067":0.667,"z068":1.499,"z069":0.667,"z070":0.667,"z071":0.667};
 /* 콜라주 배치: 사진 비율을 알고 있으므로 불러오기 전에도 열 높이를 계산할 수 있음 */
@@ -606,7 +617,7 @@ var A={
 /* ================= B ================= */
 var B={
  home:function(){
-  var h='<div class="B"><section class="hero" aria-label="대표 이미지">'+light(['g001','g002'],'','강선마을 2단지 거실',true)+hdr('b','home',true)+'<div class="txt wrap"><h1>'+tx('heroB')+'</h1></div></section>';
+  var h='<div class="B"><section class="hero" aria-label="대표 이미지">'+bhero()+hdr('b','home',true)+'<div class="txt wrap"><h1>'+tx('heroB')+'</h1></div></section>';
   h+='<section class="wrap sec" id="about" style="max-width:900px"><p class="muted" style="margin:0;font-size:13px;letter-spacing:.24em">LINN &amp; J STUDIO</p><p style="margin:22px 0 0;font-size:clamp(22px,2.6vw,32px);line-height:1.7">'+tx('introB')+'</p></section>';
   h+='<section class="wrap sec"><h2>Works</h2><div>'+ORDER.map(function(k,i){var p=P[k];var media=(typeof p.row==='string')?'<a href="#b-'+p.id+'" style="display:block">'+pic(p.row,'r32',p.name)+'</a>':light(p.row,'r32',p.name,true);return '<div class="row"><div class="img"'+(typeof p.row==='string'?'':' data-href="#b-'+p.id+'" style="cursor:pointer"')+'>'+media+'</div><div class="tx"><div class="muted" style="font-size:13px">0'+(i+1)+'</div><div class="nm">'+p.name+'</div><div class="muted" style="margin-top:6px;font-size:14px">'+p.loc+' · '+p.py+'</div><a class="tap" href="#b-'+p.id+'" style="margin-top:10px;font-size:13px;letter-spacing:.14em">VIEW PROJECT →</a></div></div>';}).join('')+'</div><div style="margin-top:56px"><a class="btn" href="#b-works">ALL WORKS</a></div></section>';
   h+='<section class="wrap sec"><h2>Before / After</h2><p class="muted" style="margin:10px 0 24px;font-size:14px">가운데 막대를 좌우로 밀어 보세요.</p><div class="mid" style="margin-left:0">'+ba(['w235','w225','위시티 거실'])+'</div></section>';
@@ -798,6 +809,16 @@ function render(){
     ds.forEach(function(d){d.addEventListener('click',function(){go(+d.getAttribute('data-i'));clearInterval(timer);});});
     kb(0);
     timer=setInterval(function(){go((i+1)%sl.length);},3000);
+  }
+  if(V[v]&&pg==='home'&&v==='b'){
+    var bh=app.querySelectorAll('.bh img'),bi=0,bc=0;
+    timer=setInterval(function(){
+      if(document.hidden)return;
+      bi=(bi+1)%BHQ.length;var nx=bh[1-bc],cu=bh[bc];
+      nx.onload=function(){nx.onload=null;nx.alt='린앤제이 시공 사진';cu.alt='';nx.removeAttribute('aria-hidden');cu.setAttribute('aria-hidden','true');nx.classList.add('on');cu.classList.remove('on');bc=1-bc;};
+      var k=BHQ[bi];nx.setAttribute('sizes','100vw');nx.setAttribute('srcset','img/bh/'+k+'-m.jpg 1280w, img/bh/'+k+'.jpg 2400w');nx.src='img/bh/'+k+'-m.jpg';
+      if(nx.complete&&nx.naturalWidth&&nx.onload)nx.onload();
+    },2500);
   }
   if(V[v]&&pg==='home'&&v==='c'){
     var links=app.querySelectorAll('.pl a'),imgs=app.querySelectorAll('.split .pic img');
