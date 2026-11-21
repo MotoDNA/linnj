@@ -52,7 +52,7 @@ a{color:inherit}
 .f:first-of-type{margin-top:0}
 .f label{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:#4A453F;margin-bottom:6px}
 .f label .chg{font-size:12px;color:#B45A08}
-input[type=text],input[type=url],input[type=tel],input[type=email],textarea,select{width:100%;min-height:44px;padding:10px 12px;border:1px solid #D6D0C6;border-radius:8px;background:#FFF;font-size:15px;line-height:1.6}
+input[type=text],input[type=password],input[type=url],input[type=tel],input[type=email],textarea,select{width:100%;min-height:44px;padding:10px 12px;border:1px solid #D6D0C6;border-radius:8px;background:#FFF;font-size:15px;line-height:1.6}
 textarea{resize:vertical;min-height:88px}
 input:focus,textarea:focus,select:focus{outline:2px solid #C9AE84;outline-offset:1px;border-color:#C9AE84}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;min-height:40px;padding:0 16px;border:1px solid #CFC7BB;border-radius:8px;background:#FFF;cursor:pointer;font-size:14px;white-space:nowrap}
@@ -159,7 +159,14 @@ input:focus,textarea:focus,select:focus{outline:2px solid #C9AE84;outline-offset
     <h1>LINN &amp; J</h1>
     <p>홈페이지 관리자</p>
     <div class="note"><b>시안 단계 연습 모드</b><br>지금 고친 내용은 이 기기의 브라우저에만 저장되고, 같은 브라우저로 연 시안 페이지에 바로 나타납니다. 실제 홈페이지를 열면 비밀번호로 로그인하고, 저장한 내용이 모든 방문자에게 보입니다.</div>
-    <button class="btn pri" id="enter" type="button" style="margin-top:22px;width:100%;min-height:48px">관리자 페이지 들어가기</button>
+    <form id="pwForm" novalidate style="margin-top:22px">
+      <p id="pwMsg" style="margin:0 0 4px;color:#1C1A18;font-size:15px">비밀번호를 입력해 주세요.</p>
+      <div class="f"><label for="pw1" id="pw1L">비밀번호</label><input type="password" id="pw1" autocomplete="current-password" style="width:100%"></div>
+      <div class="f" id="pw2Row" hidden><label for="pw2">비밀번호 한 번 더</label><input type="password" id="pw2" autocomplete="new-password" style="width:100%"></div>
+      <p id="pwErr" role="alert" style="margin:10px 0 0;color:#B42318;font-size:13px"></p>
+      <button class="btn pri" id="enter" type="submit" style="margin-top:14px;width:100%;min-height:48px">관리자 페이지 들어가기</button>
+      <p style="margin:12px 0 0;font-size:12px;color:#8A8277">비밀번호를 잊으셨으면 제작사(ONEMILL)에 연락해 주세요.</p>
+    </form>
     <p style="margin-top:14px;text-align:center"><a href="index.html#home">← 시안 목록으로</a></p>
   </div>
 </div>
@@ -205,6 +212,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid #C9AE84;outline-offset
 (function(){
 'use strict';
 var KEY='lj_admin_content',INBOX='lj_admin_inbox',HIST='lj_admin_hist';
+var PWK='lj_admin_pw',PRACTICE=true;
 var $=function(s,r){return (r||document).querySelector(s);};
 function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function clone(o){return JSON.parse(JSON.stringify(o));}
@@ -225,8 +233,12 @@ var MENU=[
   ['youtube','YOUTUBE','유튜브 채널 주소'],
   ['blog','BLOG','블로그 주소'],
   ['cap','그 밖에'],
-  ['texts','홈페이지 문구','시안별 첫 화면 문구 · 회사 정보']
+  ['texts','홈페이지 문구','시안별 첫 화면 문구 · 회사 정보'],
+  ['request','수정 요청','디자인·기능 수정을 제작사(ONEMILL)에 요청하기'],
+  ['pw','비밀번호 설정','관리자 비밀번호 바꾸기']
 ];
+/* 제작사 수정요청 접수 화면 (고객 전용 주소, 들어갈 때 비밀번호 필요) */
+var REQ_URL='https://motodna.github.io/onemill-request/?c=cbe739d89d18342a';
 
 /* ---------- 값 읽기 ---------- */
 function txv(k){return (DRAFT.tx&&DRAFT.tx[k]!=null)?DRAFT.tx[k]:DEF.tx[k].d;}
@@ -456,6 +468,33 @@ V.texts=function(b){
   where('','');
 };
 
+V.request=function(b){
+  b.innerHTML='<div class="card"><h3>제작사에 수정 요청하기</h3><p class="hint">글·사진·현장 목록·연락처처럼 이 관리자 페이지에서 직접 고칠 수 있는 것은 바로 고치시면 됩니다. '+
+   '그 밖에 <b>색·배치·메뉴 구성·새 기능</b>처럼 직접 고칠 수 없는 것은 아래 접수 화면에 남겨 주세요. 사진이나 캡처를 함께 올리실 수 있고, 진행 상태(접수 · 작업중 · 반영완료)도 여기서 확인하실 수 있습니다.</p>'+
+   '<ol class="hint" style="padding-left:18px;margin:0 0 14px"><li>제작사에서 받은 <b>접수 비밀번호</b>로 들어갑니다. (관리자 비밀번호와 다릅니다)</li><li>어느 페이지의 무엇을 어떻게 바꾸고 싶은지 적고 보냅니다.</li><li>반영되면 상태가 “반영완료”로 바뀌고 답변이 달립니다.</li></ol>'+
+   '<a class="btn pri" href="'+REQ_URL+'" target="_blank" rel="noopener">접수 화면 새 창으로 열기 ↗</a></div>'+
+   '<div class="card" style="padding:0;overflow:hidden"><iframe src="'+REQ_URL+'" title="수정 요청 접수 화면" style="display:block;width:100%;height:860px;border:0"></iframe></div>';
+  where('','');
+};
+V.pw=function(b){
+  b.innerHTML='<div class="card"><h3>관리자 비밀번호 바꾸기</h3><p class="hint">관리자 페이지에 들어갈 때 쓰는 비밀번호입니다. 8자 이상으로 정해 주세요.'+(PRACTICE?' 지금은 연습 모드라 이 브라우저에만 저장됩니다. 실제 홈페이지 연결 후에는 서버에 저장되어 어느 기기에서나 같은 비밀번호로 들어갑니다.':'')+'</p>'+
+   '<form id="cpw" novalidate><div class="f"><label for="cp0">지금 비밀번호</label><input type="password" id="cp0" autocomplete="current-password"></div>'+
+   '<div class="f"><label for="cp1">새 비밀번호 (8자 이상)</label><input type="password" id="cp1" autocomplete="new-password"></div>'+
+   '<div class="f"><label for="cp2">새 비밀번호 한 번 더</label><input type="password" id="cp2" autocomplete="new-password"></div>'+
+   '<p id="cpErr" role="alert" style="margin:10px 0 0;color:#B42318;font-size:13px"></p>'+
+   '<div class="row" style="margin-top:14px"><button class="btn pri" type="submit">비밀번호 바꾸기</button></div></form></div>';
+  b.querySelector('#cpw').addEventListener('submit',function(e){e.preventDefault();
+    var p0=b.querySelector('#cp0').value,p1=b.querySelector('#cp1').value,p2=b.querySelector('#cp2').value,er=b.querySelector('#cpErr');
+    pwCheck(p0).then(function(ok){
+      if(!ok){er.textContent='지금 비밀번호가 맞지 않아요.';b.querySelector('#cp0').focus();return;}
+      if(p1.length<8){er.textContent='새 비밀번호는 8자 이상으로 정해 주세요.';b.querySelector('#cp1').focus();return;}
+      if(p1!==p2){er.textContent='새 비밀번호 두 칸이 서로 달라요.';b.querySelector('#cp2').focus();return;}
+      pwSet(p1).then(function(){er.textContent='';b.querySelector('#cpw').reset();toast('비밀번호를 바꿨어요');});
+    });
+  });
+  where('','');
+};
+
 /* ---------- 그리기 ---------- */
 function navBadge(){var n=(lsGet(INBOX)||[]).filter(function(x){return !x.done;}).length,a=$('#nav a[href="#contact"] .badge');if(a){a.textContent=n;a.classList.toggle('hide',!n);}}
 function drawNav(){
@@ -471,7 +510,7 @@ function draw(){
   var b=$('#body'),key=VIEW+'|'+(EDIT||''),same=key===LASTV,y=b.scrollTop,wy=window.scrollY,fa=document.activeElement,fsel=null;
   if(same&&fa&&b.contains(fa)){var at=['data-gm','data-mv','data-i','data-rm','data-gr','data-ed'].filter(function(n){return fa.hasAttribute(n);});
     if(fa.hasAttribute('data-gm')||fa.hasAttribute('data-mv')){var ni=(+fa.getAttribute('data-i'))+(+(fa.getAttribute('data-gm')||fa.getAttribute('data-mv')));fsel='['+(fa.hasAttribute('data-gm')?'data-gm':'data-mv')+'="'+(fa.getAttribute('data-gm')||fa.getAttribute('data-mv'))+'"][data-i="'+ni+'"]';}}
-  LASTV=key;V[VIEW](b);drawNav();updBar();
+  LASTV=key;V[VIEW](b);drawNav();updBar();$('#savebar').style.display=(VIEW==='request'||VIEW==='pw')?'none':'';
   if(same){b.scrollTop=y;window.scrollTo(0,wy);if(fsel){var el=b.querySelector(fsel);if(el&&!el.disabled)el.focus({preventScroll:true});}}
   else b.scrollTop=0;
 }
@@ -503,8 +542,32 @@ function boot(){
   if(pf.contentWindow&&pf.contentWindow.LJ_DEFAULTS)ready();else pf.addEventListener('load',ready);
   setTimeout(fitFrame,50);
 }
-$('#enter').addEventListener('click',boot);
-try{if(sessionStorage.getItem('lj_admin_in'))boot();}catch(e){}
+/* ---------- 비밀번호 ---------- */
+/* 연습 모드: 비밀번호는 이 브라우저에 암호화(해시)해서 저장. 서버 연결 후에는 서버(스크립트 속성)에 저장 */
+function sha(t){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)).then(function(h){return Array.prototype.map.call(new Uint8Array(h),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');});}
+function pwGet(){return lsGet(PWK);}
+function pwCheck(p){var r=pwGet();if(!r)return Promise.resolve(false);return sha(r.s+':'+p).then(function(h){return h===r.h;});}
+function pwSet(p){var s=Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(12)),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');return sha(s+':'+p).then(function(h){lsSet(PWK,{s:s,h:h});});}
+(function(){
+  var f=$('#pwForm'),setup=!pwGet(),er=$('#pwErr');
+  if(setup){$('#pwMsg').textContent='처음 들어오셨어요. 관리자 비밀번호를 정해 주세요. (8자 이상)';$('#pw1L').textContent='새 비밀번호';$('#pw1').setAttribute('autocomplete','new-password');$('#pw2Row').hidden=false;$('#enter').textContent='비밀번호 정하고 들어가기';}
+  f.addEventListener('submit',function(e){e.preventDefault();
+    var p1=$('#pw1').value,lk=lsGet(PWK+'_lock')||{n:0,t:0};
+    if(setup){
+      if(p1.length<8){er.textContent='8자 이상으로 정해 주세요.';$('#pw1').focus();return;}
+      if(p1!==$('#pw2').value){er.textContent='두 칸의 비밀번호가 서로 달라요.';$('#pw2').focus();return;}
+      pwSet(p1).then(boot);return;
+    }
+    if(lk.t>Date.now()){er.textContent='비밀번호를 여러 번 틀려서 잠시 잠겼어요. '+Math.ceil((lk.t-Date.now())/60000)+'분 뒤에 다시 해 주세요.';return;}
+    pwCheck(p1).then(function(ok){
+      if(ok){localStorage.removeItem(PWK+'_lock');boot();return;}
+      lk.n++;if(lk.n>=5){lk={n:0,t:Date.now()+5*60000};}lsSet(PWK+'_lock',lk);
+      er.textContent=lk.t>Date.now()?'5번 틀려서 5분 동안 잠겼어요.':'비밀번호가 맞지 않아요.';$('#pw1').select();
+    });
+  });
+  setTimeout(function(){$('#pw1').focus();},50);
+})();
+try{if(sessionStorage.getItem('lj_admin_in')&&pwGet())boot();}catch(e){}
 })();
 </script>
 </body>
