@@ -161,7 +161,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid #C9AE84;outline-offset
     <div class="note" id="loginNote"><b>시안 단계 연습 모드</b><br>지금 고친 내용은 이 기기의 브라우저에만 저장되고, 같은 브라우저로 연 시안 페이지에 바로 나타납니다. 실제 홈페이지를 열면 비밀번호로 로그인하고, 저장한 내용이 모든 방문자에게 보입니다.</div>
     <form id="pwForm" novalidate style="margin-top:22px">
       <p id="pwMsg" style="margin:0 0 4px;color:#1C1A18;font-size:15px">비밀번호를 입력해 주세요.</p>
-      <div class="f"><label for="pw1" id="pw1L">비밀번호</label><input type="password" id="pw1" autocomplete="current-password" style="width:100%"></div>
+      <div class="f"><label for="pw1" id="pw1L">비밀번호</label><div style="position:relative"><input type="password" id="pw1" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" lang="en" inputmode="latin" style="width:100%;padding-right:64px"><button type="button" id="pwEye" aria-label="비밀번호 보기" aria-pressed="false" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);min-height:40px;padding:0 10px;border:0;background:none;color:#6B6358;font-size:13px;cursor:pointer">보기</button></div><p id="pwHan" role="status" hidden style="margin:8px 0 0;color:#B42318;font-size:13px">한글로 입력되고 있어요. 한/영 키를 눌러 영어로 바꾼 뒤 다시 입력해 주세요.</p></div>
       <div class="f" id="pw2Row" hidden><label for="pw2">비밀번호 한 번 더</label><input type="password" id="pw2" autocomplete="new-password" style="width:100%"></div>
       <p id="pwErr" role="alert" style="margin:10px 0 0;color:#B42318;font-size:13px"></p>
       <button class="btn pri" id="enter" type="submit" style="margin-top:14px;width:100%;min-height:48px">관리자 페이지 들어가기</button>
@@ -517,7 +517,8 @@ V.pw=function(b){
    '<p id="cpErr" role="alert" style="margin:10px 0 0;color:#B42318;font-size:13px"></p>'+
    '<div class="row" style="margin-top:14px"><button class="btn pri" type="submit">비밀번호 바꾸기</button></div></form></div>';
   b.querySelector('#cpw').addEventListener('submit',function(e){e.preventDefault();
-    var p0=b.querySelector('#cp0').value,p1=b.querySelector('#cp1').value,p2=b.querySelector('#cp2').value,er=b.querySelector('#cpErr');
+    var p0=b.querySelector('#cp0').value.trim(),p1=b.querySelector('#cp1').value.trim(),p2=b.querySelector('#cp2').value.trim(),er=b.querySelector('#cpErr');
+    if(/[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(p0+p1+p2)){er.textContent='한글로 입력되고 있어요. 한/영 키를 눌러 영어로 바꾼 뒤 다시 입력해 주세요.';return;}
     (PRACTICE?pwCheck(p0):Promise.resolve(p0===PW)).then(function(ok){
       if(!ok){er.textContent='지금 비밀번호가 맞지 않아요.';b.querySelector('#cp0').focus();return;}
       if(p1.length<8){er.textContent='새 비밀번호는 8자 이상으로 정해 주세요.';b.querySelector('#cp1').focus();return;}
@@ -590,9 +591,15 @@ function pwSet(p){var s=Array.prototype.map.call(crypto.getRandomValues(new Uint
 function relogin(){try{sessionStorage.removeItem('lj_pw');}catch(e){}toast('다시 로그인해 주세요.');setTimeout(function(){location.reload();},1200);}
 (function(){
   var f=$('#pwForm'),setup=PRACTICE&&!pwGet(),er=$('#pwErr');
-  if(!PRACTICE){$('#loginNote').innerHTML='저장하면 홈페이지(linnj.kr)에 바로 반영됩니다. 처음 비밀번호는 제작사에서 받으신 것을 넣고, 들어간 뒤 <b>비밀번호 설정</b>에서 바꿔 주세요.';$('#sideFoot').firstChild.textContent='저장하면 홈페이지에 바로 반영';}
+  if(!PRACTICE){$('#loginNote').innerHTML='저장하면 홈페이지(linnj.kr)에 바로 반영됩니다. 처음 비밀번호는 제작사에서 받으신 <b>관리자 비밀번호</b>를 넣고, 들어간 뒤 <b>비밀번호 설정</b>에서 바꿔 주세요. (수정요청 접수 비밀번호와는 다릅니다)';$('#sideFoot').firstChild.textContent='저장하면 홈페이지에 바로 반영';}
   if(setup){$('#pwMsg').textContent='처음 들어오셨어요. 관리자 비밀번호를 정해 주세요. (8자 이상)';$('#pw1L').textContent='새 비밀번호';$('#pw1').setAttribute('autocomplete','new-password');$('#pw2Row').hidden=false;$('#enter').textContent='비밀번호 정하고 들어가기';}
+  /* 비밀번호 보기 · 한글 입력 경고 · 앞뒤 빈칸 제거 */
+  $('#pwEye').addEventListener('click',function(){var i=$('#pw1'),on=i.type==='password';i.type=on?'text':'password';this.textContent=on?'숨기기':'보기';this.setAttribute('aria-pressed',on);this.setAttribute('aria-label',on?'비밀번호 숨기기':'비밀번호 보기');});
+  function hanChk(){$('#pwHan').hidden=!/[ㄱ-ㅎㅏ-ㅣ가-힣]/.test($('#pw1').value+($('#pw2')?$('#pw2').value:''));}
+  $('#pw1').addEventListener('input',hanChk);if($('#pw2'))$('#pw2').addEventListener('input',hanChk);
   f.addEventListener('submit',function(e){e.preventDefault();
+    $('#pw1').value=$('#pw1').value.trim();if($('#pw2'))$('#pw2').value=$('#pw2').value.trim();hanChk();
+    if(!$('#pwHan').hidden){$('#pw1').focus();return;}
     var p1=$('#pw1').value,lk=lsGet(PWK+'_lock')||{n:0,t:0};
     if(setup){
       if(p1.length<8){er.textContent='8자 이상으로 정해 주세요.';$('#pw1').focus();return;}
