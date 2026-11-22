@@ -49,6 +49,33 @@ function setup() {
   return '준비 완료';
 }
 
+/* ---------------- 시트 메뉴: [관리자] → 비밀번호 새로 정하기 ----------------
+ * 고객이 관리자 비밀번호를 잊었을 때 제작사가 이 시트에서 새 비밀번호를 정해 줍니다.
+ * 새 비밀번호는 시트에 적지 않습니다. 정한 뒤 고객에게 직접 알려 주세요. */
+function onOpen() {
+  SpreadsheetApp.getUi().createMenu('관리자').addItem('비밀번호 새로 정하기', 'resetPasswordFromSheet').addToUi();
+}
+function resetPasswordFromSheet() {
+  var ui = SpreadsheetApp.getUi();
+  var r1 = ui.prompt('관리자 비밀번호 새로 정하기', '새 비밀번호를 입력하세요 (8자 이상, 영어·숫자 권장).', ui.ButtonSet.OK_CANCEL);
+  if (r1.getSelectedButton() !== ui.Button.OK) return;
+  var p1 = String(r1.getResponseText() || '').trim();
+  if (p1.length < 8) { ui.alert('8자 이상으로 정해 주세요. 비밀번호는 바뀌지 않았습니다.'); return; }
+  if (/[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(p1)) { ui.alert('한글이 섞여 있어요. 한/영 키를 눌러 영어로 바꾼 뒤 다시 해 주세요. 비밀번호는 바뀌지 않았습니다.'); return; }
+  var r2 = ui.prompt('한 번 더 확인', '같은 비밀번호를 한 번 더 입력하세요.', ui.ButtonSet.OK_CANCEL);
+  if (r2.getSelectedButton() !== ui.Button.OK) return;
+  if (String(r2.getResponseText() || '').trim() !== p1) { ui.alert('두 번 입력한 비밀번호가 서로 달라요. 비밀번호는 바뀌지 않았습니다.'); return; }
+  setPw_(p1);
+  CacheService.getScriptCache().remove('fails');          // 여러 번 틀려서 잠긴 상태도 풀기
+  var info = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(INFO_SHEET);
+  if (info) {
+    info.getRange('A3').setValue('비밀번호');
+    info.getRange('B3').setValue('(시트 메뉴로 새로 정함 · 여기에 적지 않음)');
+    info.getRange('C3').setValue(Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm') + ' 변경');
+  }
+  ui.alert('관리자 비밀번호를 바꿨습니다. 새 비밀번호를 고객에게 직접 알려 주세요. (이전 비밀번호는 이제 쓸 수 없습니다)');
+}
+
 /* ---------------- 받는 곳 ---------------- */
 function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) || 'content';
