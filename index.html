@@ -626,7 +626,7 @@ var HS=['01','02','03','04','05','06'];
 /* 관리자에서 고를 수 있는 기본 조명 사진 12쌍 [꺼짐, 켜짐] */
 var HSLIB=['01','02','03','04','05','06','07','08','09','10','11','12'].map(function(k){return ['m'+k,'m'+k+'n'];});
 /* 관리자에서 올렸지만 이미 고화질 원본으로 준비된 사진과 같은 사진은 준비된 고화질 파일로 보여 준다 (구글 드라이브 파일 id → 사진 이름) */
-var HS_SAME={'1FoI_LNLkIETUBSUXqPwY1zdS-SxtrUTE':'m05','1ubhq3M3O8kxJT0D84kryCeDA0DZqQwco':'m05n'};
+var HS_SAME={'1FoI_LNLkIETUBSUXqPwY1zdS-SxtrUTE':'m05','1ubhq3M3O8kxJT0D84kryCeDA0DZqQwco':'m05n','1WnuTiZVHJYIEIBhZgXbqkb1sbFoGhBST':'m10','1gol9LiBwzEc-ggyxpV61BrYZ0YPs9d5-':'m10n'};
 function hsSame(k){var u=CT.up&&CT.up[k],m=u&&/id=([\w-]+)/.exec(u);return (m&&HS_SAME[m[1]])||k;}
 /* 넘김 간격(초): 관리자에서 2~12초로 정함. 기본 5초 */
 /* 사진이 바뀌는(페이드) 시간: 3초 고정. 넘김 간격이 짧으면 간격보다 0.5초 짧게 */
@@ -642,7 +642,7 @@ function hsImg(t,x,eager){
   var u=CT.up&&CT.up[x];
   /* 관리자에서 올린 사진(구글 드라이브): 휴대폰은 1600px, PC는 3200px 로 받아 선명하게 */
   if(u&&/drive\.google\.com\/thumbnail/.test(u)){var a=u.replace(/sz=w\d+/,'sz=w1600'),b=u.replace(/sz=w\d+/,'sz=w3200');return t.replace('src="'+u+'"','src="'+a+'" srcset="'+a+' 1600w, '+b+' 3200w" sizes="100vw"');}
-  var V='?v=3200';return t.replace('src="img/'+x+'.jpg"','src="img/'+x+'-m.jpg'+V+'" srcset="img/'+x+'-m.jpg'+V+' 1600w, img/'+x+'.jpg'+V+' 3200w" sizes="100vw"');}
+  var V='?v=3201';return t.replace('src="img/'+x+'.jpg"','src="img/'+x+'-m.jpg'+V+'" srcset="img/'+x+'-m.jpg'+V+' 1600w, img/'+x+'.jpg'+V+' 3200w" sizes="100vw"');}
 function blhero(){
   var h='<div class="hs" id="hs" style="--hs-fade:'+hsFade()+'s" aria-roledescription="carousel" aria-label="시공 현장 사진"><div class="hs-track">';
   var HL=hsList();
@@ -776,7 +776,7 @@ var B={
   h+='<section class="wrap sec"><h2>Before / After</h2><p class="muted" style="margin:10px 0 24px;font-size:14px">가운데 막대를 좌우로 밀어 보세요.</p><div class="mid" style="margin-left:0">'+ba(['w235','w225','위시티 거실'])+'</div></section>';
   h+='<section class="wrap sec"><div class="grid2">'+light(['z012','z013'],'r32','위브더제니스 거실')+light(['c008','c009'],'r32','청원레이크빌 거실')+'</div></section>';
   h+=aboutBlock()+processBlock();
-  h+='<section class="wrap sec" style="text-align:center"><p style="margin:0;font-size:clamp(22px,2.4vw,30px)">'+tx('ctaB')+'</p><div style="margin-top:28px"><a class="btn" href="#'+BV+'-contact">상담 신청</a></div></section>'+foot()+'</div>';
+  h+='<section class="wrap sec" id="cta" style="text-align:center"><p style="margin:0;font-size:clamp(22px,2.4vw,30px)">'+tx('ctaB')+'</p><div style="margin-top:28px"><a class="btn" href="#'+BV+'-contact">상담 신청</a></div></section>'+foot()+'</div>';
   return h;
  },
  works:function(band){
@@ -860,7 +860,7 @@ var TX={
  introA2:{g:'hero',v:'a',l:'시안 A · 소개 작은 문장',d:'전국의 아파트를\n오래 살아도 편안한 집으로 다시 짓습니다.',at:'#about'},
  heroB:{g:'hero',v:'b',l:'첫 화면 큰 제목',d:'빛이 켜지는 순간,\n집이 완성됩니다.'},
  introB:{g:'hero',v:'b',l:'소개 문장',d:'구조와 동선을 먼저 설계하고, 빛으로 마무리합니다.',at:'#about'},
- ctaB:{g:'hero',v:'b',l:'아래쪽 상담 문장',d:'우리 집의 밤을 상상해 보세요.'},
+ ctaB:{g:'hero',v:'b',l:'아래쪽 상담 문장',d:'우리 집의 밤을 상상해 보세요.',at:'#cta'},
  sideC:{g:'hero',v:'c',l:'시안 C · 왼쪽 소개 문장',d:'구조와 동선을 먼저 설계하는\n전국의 아파트 인테리어'},
  heroD1:{g:'hero',v:'d',l:'시안 D · 영상 위 큰 제목',d:'Live in the Light',one:1},
  heroD2:{g:'hero',v:'d',l:'시안 D · 영상 위 작은 문장',d:'오래 살아도 편안한 집, 린앤제이',one:1},
