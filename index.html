@@ -286,6 +286,11 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
 .B .hero .lt .bulb{bottom:76px;right:20px}
 .B .hero .bshade{position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,0) 22%,rgba(0,0,0,0) 50%,rgba(0,0,0,.5) 92%)}
 .B .hero h1{margin:0;font-size:clamp(34px,5vw,64px);font-weight:300;line-height:1.3}
+.B .hero .txt.pos{top:calc(var(--hh,96px) + 24px);bottom:72px}
+.B .hero .txt.pos.pr{bottom:128px}
+.B .hero .txt.pos .tin{position:absolute;top:0;bottom:0;left:clamp(20px,4vw,48px);right:clamp(20px,4vw,48px)}
+.B .hero .txt.pos h1{position:absolute;left:var(--x);top:var(--y);transform:translate(calc(-1 * var(--x)),calc(-1 * var(--y)));text-align:var(--al);width:max-content;max-width:100%}
+@media (min-width:601px) and (max-height:540px){.B .hero .txt.pos{top:calc(var(--hh,96px) + 8px);bottom:46px}.B .hero .txt.pos.pr{bottom:140px}}
 .B .muted{color:#A39A8E}
 .B.BW{background:#FFFFFF;color:#1C1A18}
 .B.BW .hdr{background:rgba(255,255,255,.94);border-bottom:1px solid #E6E1D8}
@@ -371,6 +376,8 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
  .B .hero .lt .bulb{bottom:7px;right:7px}
  .B .hdr.over{background:rgba(18,17,16,.96);border-bottom:1px solid #2E2B28}
  .B .hero .txt{position:static;padding-top:22px;padding-bottom:6px}
+ .B .hero .txt.pos .tin{position:static}
+ .B .hero .txt.pos h1{position:static;transform:none;width:auto;max-width:none}
  .B .hero h1{font-size:28px}
  .bh img{transform:none}.bh img.on{animation:none}.bh::after{display:none}
  .D .vhero{height:auto;min-height:0;padding-top:calc(var(--hh,120px) + 66.667vw);background:#FFFFFF}
@@ -622,9 +629,14 @@ var HSLIB=['01','02','03','04','05','06','07','08','09','10','11','12'].map(func
 var HS_SAME={'1FoI_LNLkIETUBSUXqPwY1zdS-SxtrUTE':'m05','1ubhq3M3O8kxJT0D84kryCeDA0DZqQwco':'m05n'};
 function hsSame(k){var u=CT.up&&CT.up[k],m=u&&/id=([\w-]+)/.exec(u);return (m&&HS_SAME[m[1]])||k;}
 /* 넘김 간격(초): 관리자에서 2~12초로 정함. 기본 5초 */
-/* 사진이 바뀌는(페이드) 시간(초): 관리자에서 0.5~3초로 정함. 기본 1.2초. 넘김 간격보다 길지 않게 */
-function hsFade(){var n=+CT.hsFade;n=(n>=0.5&&n<=3)?n:1.2;return Math.min(n,hsSec()-0.5);}
+/* 사진이 바뀌는(페이드) 시간: 3초 고정. 넘김 간격이 짧으면 간격보다 0.5초 짧게 */
+function hsFade(){return Math.min(3,hsSec()-0.5);}
 function hsSec(){var n=+CT.hsSec;return (n>=2&&n<=12)?n:5;}
+/* 첫 화면 큰 제목 위치: 관리자에서 정함. CT.heroPos={x:0~100(왼쪽→오른쪽), y:0~100(위→아래)}. 없으면 원래 자리(왼쪽 아래) */
+function heroTxt(){var p=CT.heroPos,ok=p&&isFinite(+p.x)&&isFinite(+p.y);
+  if(!ok)return '<div class="txt wrap"><div class="tin"><h1>'+tx('heroB')+'</h1></div></div>';
+  var x=Math.max(0,Math.min(100,+p.x)),y=Math.max(0,Math.min(100,+p.y)),al=x<34?'left':(x>66?'right':'center');
+  return '<div class="txt wrap pos'+(x>60?' pr':'')+'" style="--x:'+x+'%;--y:'+y+'%;--al:'+al+'"><div class="tin"><h1>'+tx('heroB')+'</h1></div></div>';}
 function hsList(){var L=(CT.hs&&CT.hs.length)?CT.hs:HS.map(function(k){return ['m'+k,'m'+k+'n'];});return L.filter(function(p){return p&&p[0]&&p[1];}).map(function(p){return [hsSame(p[0]),hsSame(p[1])];});}
 function hsImg(t,x,eager){
   var u=CT.up&&CT.up[x];
@@ -758,7 +770,7 @@ var A={
 var BV='b';function BCLS(){return BV==='bw'?'B BW':'B';}
 var B={
  home:function(){
-  var h='<div class="'+BCLS()+'"><section class="hero" aria-label="대표 이미지">'+blhero()+'<div class="bshade"></div>'+hdr(BV,'home',true)+'<div class="txt wrap"><h1>'+tx('heroB')+'</h1></div></section>';
+  var h='<div class="'+BCLS()+'"><section class="hero" aria-label="대표 이미지">'+blhero()+'<div class="bshade"></div>'+hdr(BV,'home',true)+''+heroTxt()+'</section>';
   h+='<section class="wrap sec" id="about" style="max-width:900px"><p class="muted" style="margin:0;font-size:13px;letter-spacing:.24em">LINN &amp; J STUDIO</p><p style="margin:22px 0 0;font-size:clamp(22px,2.6vw,32px);line-height:1.7">'+tx('introB')+'</p></section>';
   h+='<section class="wrap sec"><h2>Works</h2><div>'+ORDER.map(function(k,i){var p=P[k];var media=(typeof p.row==='string')?'<a href="#'+BV+'-'+p.id+'" style="display:block">'+pic(p.row,'r32',p.name)+'</a>':light(p.row,'r32',p.name,true);return '<div class="row"><div class="img"'+(typeof p.row==='string'?'':' data-href="#'+BV+'-'+p.id+'" style="cursor:pointer"')+'>'+media+'</div><div class="tx"><div class="muted" style="font-size:13px">0'+(i+1)+'</div><div class="nm">'+p.name+'</div><div class="muted" style="margin-top:6px;font-size:14px">'+p.loc+' · '+p.py+'</div><a class="tap" href="#'+BV+'-'+p.id+'" style="margin-top:10px;font-size:13px;letter-spacing:.14em">VIEW PROJECT →</a></div></div>';}).join('')+'</div><div style="margin-top:56px"><a class="btn" href="#'+BV+'-works">ALL WORKS</a></div></section>';
   h+='<section class="wrap sec"><h2>Before / After</h2><p class="muted" style="margin:10px 0 24px;font-size:14px">가운데 막대를 좌우로 밀어 보세요.</p><div class="mid" style="margin-left:0">'+ba(['w235','w225','위시티 거실'])+'</div></section>';
