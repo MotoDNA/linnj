@@ -377,10 +377,13 @@ function openPrevIfSmall(){if(window.innerWidth<=1100)$('#prev').classList.add('
 function readPhoto(file,cb){
   if(!/^image\//.test(file.type)){toast('사진 파일만 올릴 수 있어요.');return;}
   var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){
-    var M=PRACTICE?1600:2000,w=im.naturalWidth,h=im.naturalHeight,s=Math.min(1,M/Math.max(w,h)),c=document.createElement('canvas');
-    c.width=Math.round(w*s);c.height=Math.round(h*s);var x=c.getContext('2d');x.fillStyle='#FFF';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+    /* 선명하게: 긴 변 3200px 까지, 반씩 여러 번 줄여서(한 번에 크게 줄이면 뭉개짐), 품질 92% */
+    var M=PRACTICE?1600:3200,w=im.naturalWidth,h=im.naturalHeight,s=Math.min(1,M/Math.max(w,h)),W=Math.round(w*s),H=Math.round(h*s);
+    var src=im,cw=w,ch=h;
+    while(cw/2>=W){var t=document.createElement('canvas');t.width=Math.round(cw/2);t.height=Math.round(ch/2);var tx=t.getContext('2d');tx.imageSmoothingEnabled=true;tx.imageSmoothingQuality='high';tx.drawImage(src,0,0,t.width,t.height);src=t;cw=t.width;ch=t.height;}
+    var c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.fillStyle='#FFF';x.fillRect(0,0,W,H);x.drawImage(src,0,0,W,H);
     var key='up'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-    var du=c.toDataURL('image/jpeg',.85);
+    var du=c.toDataURL('image/jpeg',PRACTICE?.85:.92);
     if(PRACTICE){DRAFT.up=DRAFT.up||{};DRAFT.dim=DRAFT.dim||{};DRAFT.up[key]=du;DRAFT.dim[key]=Math.round(h/w*1000)/1000;cb(key);return;}
     toast('사진을 올리는 중이에요…');
     api({action:'upload',name:(file.name||key).replace(/\.[^.]+$/,'')+'.jpg',mime:'image/jpeg',data:du.split(',')[1]},2).then(function(j){
