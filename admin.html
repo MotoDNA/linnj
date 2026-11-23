@@ -588,45 +588,88 @@ V.youtube=function(b){linkView(b,'yt','유튜브','메뉴의 YOUTUBE와 맨 아�
 V.blog=function(b){linkView(b,'blog','블로그','메뉴의 BLOG와 맨 아래 링크가 이 주소로 연결됩니다.','https://blog.naver.com/...');};
 
 /* 첫 화면 큰 제목 위치: 9칸 중 하나를 누르거나, 막대로 가로·세로를 세밀하게. 바꾸면 미리보기에 바로 보임 */
-/* 첫 화면 큰 제목의 아랫줄: 작게(오른쪽 맞춤) 또는 첫 줄과 같은 크기 */
-function heroSubBlock(){var same=DRAFT.heroSub==='same';
-  return '<div class="f hsubf"><label><span>아랫줄 글자</span></label><div class="row" style="gap:6px">'+
-   '<button class="btn sm" type="button" data-hsub="small"'+(same?'':' style="background:#1C1A18;color:#fff;border-color:#1C1A18"')+'>작게 (첫 줄 오른쪽 끝에 맞춤)</button>'+
-   '<button class="btn sm" type="button" data-hsub="same"'+(same?' style="background:#1C1A18;color:#fff;border-color:#1C1A18"':'')+'>첫 줄과 같은 크기</button></div>'+
-   '<p class="hint" style="margin:6px 0 0">위 칸에서 엔터로 줄을 나누면 둘째 줄부터가 아랫줄입니다.</p></div>';}
-function wireHeroSub(b){b.querySelectorAll('[data-hsub]').forEach(function(x){x.addEventListener('click',function(){
-  if(x.dataset.hsub==='same')DRAFT.heroSub='same';else delete DRAFT.heroSub;changed();
-  var f=b.querySelector('.hsubf'),d=document.createElement('div');d.innerHTML=heroSubBlock();f.replaceWith(d.firstChild);wireHeroSub(b);where('','');});});}
-function heroPosCur(){var p=DRAFT.heroPos;return (p&&isFinite(+p.x)&&isFinite(+p.y))?{x:+p.x,y:+p.y}:null;}
-function heroPosBlock(){
-  var p=heroPosCur(),cx=p?p.x:0,cy=p?p.y:100;
-  var cells=[[0,0],[50,0],[100,0],[0,50],[50,50],[100,50],[0,100],[50,100],[100,100]],names=['왼쪽 위','가운데 위','오른쪽 위','왼쪽 가운데','한가운데','오른쪽 가운데','왼쪽 아래','가운데 아래','오른쪽 아래'];
-  return '<div class="f hpos"><label><span>첫 화면 큰 제목 위치</span><span>'+(p?'<span class="chg">바꾼 위치</span> <button class="btn link" type="button" id="hpDef">원래 자리로</button>':'<span class="hint" style="margin:0">지금: 원래 자리(왼쪽 아래)</span>')+'</span></label>'+
-   '<div class="row" style="gap:18px;align-items:flex-start;flex-wrap:wrap">'+
-   '<div class="hpg" role="group" aria-label="제목 위치 고르기">'+cells.map(function(c,i){var on=(p?(c[0]===cx&&c[1]===cy):i===6);return '<button type="button" data-hp="'+c[0]+','+c[1]+'" aria-label="'+names[i]+'" aria-pressed="'+on+'"><i></i></button>';}).join('')+'</div>'+
-   '<div style="flex:1;min-width:220px"><div class="hps"><span>가로</span><input type="range" id="hpX" min="0" max="100" step="1" value="'+cx+'" aria-label="가로 위치"><b id="hpXv">'+hpName(cx,'x')+'</b></div>'+
-   '<div class="hps"><span>세로</span><input type="range" id="hpY" min="0" max="100" step="1" value="'+cy+'" aria-label="세로 위치"><b id="hpYv">'+hpName(cy,'y')+'</b></div>'+
-   '<p class="hint" style="margin:6px 0 0">막대를 움직이면 오른쪽 미리보기에서 바로 보입니다. 휴대폰에서는 제목이 사진 아래에 나오고, 왼쪽·가운데·오른쪽 정렬만 따라갑니다.</p></div></div></div>';
+/* 첫 화면: 큰 제목과 작은 문구를 따로 입력. 작은 문구는 큰 제목에 붙어 함께 움직이거나(기본), 체크를 풀면 따로 위치를 정함 */
+function heroSplitLegacy(){
+  /* 예전에는 큰 제목 칸에 엔터로 두 줄을 넣고 둘째 줄을 작게 보여 줬음 → 처음 열 때 두 칸으로 나눠 준다 */
+  [DRAFT,SAVED].forEach(function(C){C.tx=C.tx||{};if(C.tx.heroSubT!=null)return;var t=C.tx.heroB!=null&&C.tx.heroB!==''?C.tx.heroB:DEF.tx.heroB.d;
+    if(C.heroSub==='same'||String(t).indexOf('\n')<0){C.tx.heroSubT='';delete C.heroSub;return;}
+    var L=String(t).split('\n');C.tx.heroB=L[0];C.tx.heroSubT=L.slice(1).join('\n');delete C.heroSub;});
+  updBar();
 }
+function posCur(key){var p=DRAFT[key];return (p&&isFinite(+p.x)&&isFinite(+p.y))?{x:+p.x,y:+p.y}:null;}
 function hpName(v,ax){v=+v;if(ax==='x')return v<34?'왼쪽':(v>66?'오른쪽':'가운데');return v<34?'위':(v>66?'아래':'가운데');}
-function wireHeroPos(b){
-  var bx=b.querySelector('.hpos');if(!bx)return;
-  function show(){where('','');}
-  function set(x,y,redraw){DRAFT.heroPos={x:Math.round(x),y:Math.round(y)};changed();
-    bx.querySelector('#hpX').value=x;bx.querySelector('#hpY').value=y;bx.querySelector('#hpXv').textContent=hpName(x,'x');bx.querySelector('#hpYv').textContent=hpName(y,'y');
-    bx.querySelectorAll('[data-hp]').forEach(function(btn){var c=btn.dataset.hp.split(',').map(Number);btn.setAttribute('aria-pressed',c[0]===+x&&c[1]===+y);});
-    if(redraw){var lab=bx.querySelector('label span:last-child');lab.innerHTML='<span class="chg">바꾼 위치</span> <button class="btn link" type="button" id="hpDef">원래 자리로</button>';wireDef();}}
-  function wireDef(){var d=bx.querySelector('#hpDef');if(d)d.onclick=function(){delete DRAFT.heroPos;changed();var nb=document.createElement('div');nb.innerHTML=heroPosBlock();bx.replaceWith(nb.firstChild);wireHeroPos(b);show();};}
-  bx.querySelectorAll('[data-hp]').forEach(function(btn){btn.addEventListener('click',function(){var c=btn.dataset.hp.split(',').map(Number);set(c[0],c[1],true);show();});});
-  ['hpX','hpY'].forEach(function(id){var r=bx.querySelector('#'+id);r.addEventListener('input',function(){set(+bx.querySelector('#hpX').value,+bx.querySelector('#hpY').value,!heroPosCur()||true);});r.addEventListener('focus',show);});
+var POSDEF={heroPos:{x:0,y:100,label:'큰 제목 위치',orig:'원래 자리(왼쪽 아래)'},subPos:{x:100,y:100,label:'작은 문구 위치',orig:'오른쪽 아래'}};
+function posBlock(key){
+  var D=POSDEF[key],p=posCur(key),cx=p?p.x:D.x,cy=p?p.y:D.y;
+  var cells=[[0,0],[50,0],[100,0],[0,50],[50,50],[100,50],[0,100],[50,100],[100,100]],names=['왼쪽 위','가운데 위','오른쪽 위','왼쪽 가운데','한가운데','오른쪽 가운데','왼쪽 아래','가운데 아래','오른쪽 아래'];
+  return '<div class="f hpos" data-pos="'+key+'"><label><span>'+D.label+'</span><span>'+(p?'<span class="chg">바꾼 위치</span> <button class="btn link" type="button" data-posdef>처음 자리로</button>':'<span class="hint" style="margin:0">지금: '+D.orig+'</span>')+'</span></label>'+
+   '<div class="row" style="gap:18px;align-items:flex-start;flex-wrap:wrap">'+
+   '<div class="hpg" role="group" aria-label="'+D.label+' 고르기">'+cells.map(function(c,i){return '<button type="button" data-hp="'+c[0]+','+c[1]+'" aria-label="'+names[i]+'" aria-pressed="'+(c[0]===cx&&c[1]===cy)+'"><i></i></button>';}).join('')+'</div>'+
+   '<div style="flex:1;min-width:220px"><div class="hps"><span>가로</span><input type="range" data-ax="x" min="0" max="100" step="1" value="'+cx+'" aria-label="가로 위치"><b data-axv="x">'+hpName(cx,'x')+'</b></div>'+
+   '<div class="hps"><span>세로</span><input type="range" data-ax="y" min="0" max="100" step="1" value="'+cy+'" aria-label="세로 위치"><b data-axv="y">'+hpName(cy,'y')+'</b></div>'+
+   '<p class="hint" style="margin:6px 0 0">막대를 움직이면 오른쪽 미리보기에서 바로 보입니다. 휴대폰에서는 문구가 사진 아래에 나오고, 왼쪽·가운데·오른쪽 정렬만 따라갑니다.</p></div></div></div>';
+}
+function wirePos(bx){
+  var key=bx.dataset.pos;
+  function rebuild(){var d=document.createElement('div');d.innerHTML=posBlock(key);var nb=d.firstChild;bx.replaceWith(nb);wirePos(nb);}
+  function set(x,y,re){DRAFT[key]={x:Math.round(x),y:Math.round(y)};changed();where('','');
+    if(re){rebuild();return;}
+    bx.querySelector('[data-axv="x"]').textContent=hpName(x,'x');bx.querySelector('[data-axv="y"]').textContent=hpName(y,'y');
+    bx.querySelectorAll('[data-hp]').forEach(function(btn){var c=btn.dataset.hp.split(',').map(Number);btn.setAttribute('aria-pressed',c[0]===+x&&c[1]===+y);});}
+  bx.querySelectorAll('[data-hp]').forEach(function(btn){btn.addEventListener('click',function(){var c=btn.dataset.hp.split(',').map(Number);set(c[0],c[1],true);});});
+  var rx=bx.querySelector('[data-ax="x"]'),ry=bx.querySelector('[data-ax="y"]');
+  [rx,ry].forEach(function(r){r.addEventListener('input',function(){var first=!posCur(key);set(+rx.value,+ry.value,false);if(first){var lab=bx.querySelector('label span:last-child');lab.innerHTML='<span class="chg">바꾼 위치</span> <button class="btn link" type="button" data-posdef>처음 자리로</button>';wireDef();}});});
+  function wireDef(){var d=bx.querySelector('[data-posdef]');if(d)d.onclick=function(){delete DRAFT[key];changed();where('','');rebuild();};}
   wireDef();
 }
+/* 글꼴·크기: w='t'(큰 제목) / 's'(작은 문구). 크기는 PC 화면 기준(px), 휴대폰에서는 알맞게 줄어듦 */
+var FONTL=[['serif','본명조 (지금 홈페이지 글씨)',"'Noto Serif KR',serif"],['sans','본고딕',"'Noto Sans KR',sans-serif"],['nmj','나눔명조',"'Nanum Myeongjo',serif"],['gowun','고운바탕',"'Gowun Batang',serif"],['ngo','나눔고딕',"'Nanum Gothic',sans-serif"],['corm','Cormorant (영문 명조)',"'Cormorant Garamond',serif"],['play','Playfair (영문 명조)',"'Playfair Display',serif"]];
+var FSZ={t:{def:64,min:28,max:120,font:'serif',l:'큰 제목'},s:{def:19,min:11,max:40,font:'sans',l:'작은 문구'}};
+(function(){var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&family=Gowun+Batang&family=Nanum+Gothic&family=Cormorant+Garamond&family=Playfair+Display&display=swap';document.head.appendChild(l);})();
+function fCur(w){return (DRAFT.heroFont&&DRAFT.heroFont[w])||FSZ[w].font;}
+function zCur(w){var z=DRAFT.heroSize&&+DRAFT.heroSize[w];return (z>=FSZ[w].min&&z<=FSZ[w].max)?z:FSZ[w].def;}
+function fontBlock(w){
+  var D=FSZ[w],ch=(DRAFT.heroFont&&DRAFT.heroFont[w])||(DRAFT.heroSize&&DRAFT.heroSize[w]);
+  return '<div class="f fz" data-fz="'+w+'"><label><span>'+D.l+' 글꼴 · 크기</span><span>'+(ch?'<button class="btn link" type="button" data-fzdef>처음 글꼴·크기로</button>':'')+'</span></label>'+
+   '<div class="row" style="gap:12px;align-items:center;flex-wrap:wrap"><select data-font aria-label="'+D.l+' 글꼴" style="min-width:210px;padding:8px 10px;border:1px solid #D9D3CA;border-radius:8px;font:inherit;font-size:14px;background:#fff">'+
+   FONTL.map(function(f){return '<option value="'+f[0]+'"'+(fCur(w)===f[0]?' selected':'')+' style="font-family:'+f[2].replace(/"/g,"'")+'">'+f[1]+'</option>';}).join('')+'</select>'+
+   '<div class="hps" style="flex:1;min-width:200px;margin:0"><span>크기</span><input type="range" data-size min="'+D.min+'" max="'+D.max+'" step="1" value="'+zCur(w)+'" aria-label="'+D.l+' 글자 크기"><b data-sizev>'+zCur(w)+'px</b></div></div>'+
+   '<div class="fsample" style="margin-top:8px;padding:10px 12px;background:#5b5650;color:#fff;border-radius:8px;font-family:'+FONTL.filter(function(f){return f[0]===fCur(w);})[0][2].replace(/"/g,"'")+';font-size:'+Math.min(zCur(w),w==='t'?40:20)+'px;line-height:1.3">'+(w==='t'?'Your Space 빛이 켜지는 순간':'완성된 공간으로 삶에 실질적 가치를')+'</div>'+
+   '<p class="hint" style="margin:6px 0 0">크기는 PC 화면 기준입니다. 휴대폰·작은 화면에서는 알맞게 줄어듭니다. (처음: '+D.def+'px)</p></div>';
+}
+function wireFont(bx){
+  var w=bx.dataset.fz;
+  function rebuild(){var d=document.createElement('div');d.innerHTML=fontBlock(w);var nb=d.firstChild;bx.replaceWith(nb);wireFont(nb);}
+  function clean(o){for(var k in o)if(o[k]==null)delete o[k];}
+  bx.querySelector('[data-font]').addEventListener('change',function(e){DRAFT.heroFont=DRAFT.heroFont||{};if(e.target.value===FSZ[w].font)delete DRAFT.heroFont[w];else DRAFT.heroFont[w]=e.target.value;if(!Object.keys(DRAFT.heroFont).length)delete DRAFT.heroFont;changed();where('','');rebuild();});
+  var r=bx.querySelector('[data-size]');
+  r.addEventListener('input',function(){DRAFT.heroSize=DRAFT.heroSize||{};var v=+r.value;if(v===FSZ[w].def)delete DRAFT.heroSize[w];else DRAFT.heroSize[w]=v;if(!Object.keys(DRAFT.heroSize).length)delete DRAFT.heroSize;
+    bx.querySelector('[data-sizev]').textContent=v+'px';bx.querySelector('.fsample').style.fontSize=Math.min(v,w==='t'?40:20)+'px';changed();where('','');});
+  r.addEventListener('change',rebuild);
+  var d=bx.querySelector('[data-fzdef]');if(d)d.onclick=function(){if(DRAFT.heroFont){delete DRAFT.heroFont[w];if(!Object.keys(DRAFT.heroFont).length)delete DRAFT.heroFont;}if(DRAFT.heroSize){delete DRAFT.heroSize[w];if(!Object.keys(DRAFT.heroSize).length)delete DRAFT.heroSize;}changed();where('','');rebuild();};
+}
+function subLinked(){return DRAFT.subFree!==true;}
+function subLinkBlock(){
+  return '<div class="f slink"><label class="chk" style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px"><input type="checkbox" id="subLink" '+(subLinked()?'checked':'')+' style="width:18px;height:18px;margin-top:2px">'+
+   '<span><b style="font-weight:500">큰 제목과 함께 움직이기</b><br><span class="hint" style="margin:0">체크하면 작은 문구가 큰 제목 바로 아래 오른쪽 끝에 붙어서 같이 움직입니다. 체크를 풀면 작은 문구 위치를 따로 정할 수 있어요.</span></span></label></div>'+
+   (subLinked()?'':posBlock('subPos'));
+}
+function wireSub(b){
+  var cb=b.querySelector('#subLink');if(!cb)return;
+  cb.addEventListener('change',function(){if(cb.checked)delete DRAFT.subFree;else DRAFT.subFree=true;changed();where('','');
+    var wrap=b.querySelector('.slinkwrap');wrap.innerHTML=subLinkBlock();wireSub(b);});
+  var sp=b.querySelector('.slinkwrap [data-pos="subPos"]');if(sp)wirePos(sp);
+}
 V.texts=function(b){
+  heroSplitLegacy();
   var groups=[['b','홈페이지']];
   b.innerHTML='<div class="card"><h3>회사 정보</h3><p class="hint">맨 아래 회사 정보 줄에 나옵니다.</p>'+txField('ceo')+txField('biz')+'</div>'+
-  groups.map(function(g){var ks=Object.keys(DEF.tx).filter(function(k){return DEF.tx[k].g==='hero'&&DEF.tx[k].v===g[0];});
-    return '<div class="card"><h3>'+g[1]+' 문구</h3><p class="hint">칸을 누르면 오른쪽 미리보기에서 그 문구가 나오는 곳을 보여 줍니다.</p>'+ks.map(function(k){return txField(k)+(k==='heroB'?heroSubBlock()+heroPosBlock():'');}).join('')+'</div>';}).join('');
-  wireTx(b);wireHeroPos(b);wireHeroSub(b);
+  '<div class="card"><h3>첫 화면 제목</h3><p class="hint">큰 제목과 그 아래 작은 문구를 따로 적습니다. 작은 문구를 비우면 큰 제목만 나옵니다.</p>'+
+   txField('heroB')+fontBlock('t')+posBlock('heroPos')+txField('heroSubT')+fontBlock('s')+'<div class="slinkwrap">'+subLinkBlock()+'</div></div>'+
+  groups.map(function(g){var ks=Object.keys(DEF.tx).filter(function(k){return DEF.tx[k].g==='hero'&&DEF.tx[k].v===g[0]&&k!=='heroB'&&k!=='heroSubT';});
+    return '<div class="card"><h3>'+g[1]+' 문구</h3><p class="hint">칸을 누르면 오른쪽 미리보기에서 그 문구가 나오는 곳을 보여 줍니다.</p>'+ks.map(txField).join('')+'</div>';}).join('');
+  wireTx(b);
+  b.querySelectorAll('.card > .hpos').forEach(wirePos);wireSub(b);b.querySelectorAll('.fz').forEach(wireFont);
   b.querySelectorAll('[data-tx="ceo"],[data-tx="biz"]').forEach(function(el){el.addEventListener('focus',function(){where('','footer');});});
   where('','');
 };

@@ -286,14 +286,19 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
 .B .hero .lt .bulb{bottom:76px;right:20px}
 .B .hero .bshade{position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,0) 22%,rgba(0,0,0,0) 50%,rgba(0,0,0,.5) 92%)}
 .B .hero h1{margin:0;font-size:clamp(34px,5vw,64px);font-weight:300;line-height:1.3}
-.B .hero h1.hsub .ht{display:inline-block;text-align:left}
-.B .hero h1.hsub .l1{display:block;white-space:nowrap}
-.B .hero h1.hsub .l2{display:block;margin-top:.55em;text-align:right;font-family:'Noto Sans KR',sans-serif;font-weight:400;font-size:clamp(13px,.3em,20px);letter-spacing:.02em;line-height:1.6;opacity:.95}
+.B .hero h1.hsub .ht{display:inline-block;text-align:inherit}
+.B .hero h1.hsub .l1{display:block;font-family:var(--hft,inherit);font-size:clamp(34px,5vw,64px);line-height:1.3}
+.B .hero .txt[style*="--hzt"] h1.hsub .l1{font-size:clamp(calc(var(--hzt) * .55px),calc(var(--hzt) * .0694vw),calc(var(--hzt) * 1px))}
+.B .hero h1.hsub .l2,.B .hero .sub2{display:block;font-family:var(--hfs,'Noto Sans KR',sans-serif);font-weight:400;font-size:clamp(13px,1.33vw,19px);letter-spacing:.02em;line-height:1.6;opacity:.95}
+.B .hero .txt[style*="--hzs"] h1.hsub .l2,.B .hero .txt[style*="--hzs"] .sub2{font-size:clamp(calc(var(--hzs) * .7px),calc(var(--hzs) * .0694vw),calc(var(--hzs) * 1px))}
+.B .hero h1.hsub .l2{margin-top:.6em;text-align:right}
+.B .hero .txt .sub2{margin:0}
+.B .hero .txt.pos .sub2{position:absolute;left:var(--sx);top:var(--sy);transform:translate(calc(-1 * var(--sx)),calc(-1 * var(--sy)));text-align:var(--sal);width:max-content;max-width:100%}
 .B .hero .txt.pos{top:calc(var(--hh,96px) + 24px);bottom:72px}
 .B .hero .txt.pos.pr{bottom:128px}
 .B .hero .txt.pos .tin{position:absolute;top:0;bottom:0;left:clamp(20px,4vw,48px);right:clamp(20px,4vw,48px)}
 .B .hero .txt.pos h1{position:absolute;left:var(--x);top:var(--y);transform:translate(calc(-1 * var(--x)),calc(-1 * var(--y)));text-align:var(--al);width:max-content;max-width:100%}
-@media (min-width:601px) and (max-height:540px){.B .hero .txt.pos{top:calc(var(--hh,96px) + 8px);bottom:46px}.B .hero .txt.pos.pr{bottom:140px}}
+@media (min-width:601px) and (max-height:540px){.B .hero h1.hsub .l1{font-size:clamp(22px,4vw,34px)}.B .hero .txt[style*="--hzt"] h1.hsub .l1{font-size:clamp(20px,calc(var(--hzt) * .035vw),calc(var(--hzt) * .55px))}.B .hero .txt.pos{top:calc(var(--hh,96px) + 8px);bottom:46px}.B .hero .txt.pos.pr{bottom:140px}}
 .B .muted{color:#A39A8E}
 .B.BW{background:#FFFFFF;color:#1C1A18}
 .B.BW .hdr{background:rgba(255,255,255,.94);border-bottom:1px solid #E6E1D8}
@@ -382,8 +387,11 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
  .B .hero .txt.pos .tin{position:static}
  .B .hero .txt.pos h1{position:static;transform:none;width:auto;max-width:none}
  .B .hero h1{font-size:28px}
- .B .hero h1.hsub .l1{white-space:normal}
- .B .hero h1.hsub .l2{font-size:13px}
+ .B .hero h1.hsub .l1{font-size:28px}
+ .B .hero .txt[style*="--hzt"] h1.hsub .l1{font-size:max(20px,calc(var(--hzt) * .44px))}
+ .B .hero h1.hsub .l2,.B .hero .txt .sub2{font-size:13px}
+ .B .hero .txt[style*="--hzs"] h1.hsub .l2,.B .hero .txt[style*="--hzs"] .sub2{font-size:max(11px,calc(var(--hzs) * .68px))}
+ .B .hero .txt.pos .sub2{position:static;transform:none;width:auto;margin-top:8px}
  .bh img{transform:none}.bh img.on{animation:none}.bh::after{display:none}
  .D .vhero{height:auto;min-height:0;padding-top:calc(var(--hh,120px) + 66.667vw);background:#FFFFFF}
  .D .vhero .bh{top:var(--hh,120px);bottom:auto;height:66.667vw}
@@ -638,14 +646,25 @@ function hsSame(k){var u=CT.up&&CT.up[k],m=u&&/id=([\w-]+)/.exec(u);return (m&&H
 function hsFade(){return Math.min(3,hsSec()-0.5);}
 function hsSec(){var n=+CT.hsSec;return (n>=2&&n<=12)?n:5;}
 /* 첫 화면 큰 제목 위치: 관리자에서 정함. CT.heroPos={x:0~100(왼쪽→오른쪽), y:0~100(위→아래)}. 없으면 원래 자리(왼쪽 아래) */
-/* 첫 화면 큰 제목: 첫 줄은 크게, 아랫줄은 작은 고딕 글씨로 첫 줄 오른쪽 끝에 맞춤 (관리자에서 '같은 크기'로 바꿀 수 있음) */
-function heroH1(){var raw=(CT.tx&&CT.tx.heroB!=null&&CT.tx.heroB!=='')?CT.tx.heroB:TX.heroB.d,L=String(raw).split('\n');
-  if(CT.heroSub==='same'||L.length<2)return '<h1>'+tx('heroB')+'</h1>';
-  return '<h1 class="hsub"><span class="ht"><span class="l1">'+esc(L[0])+'</span><span class="l2">'+L.slice(1).map(esc).join('<br>')+'</span></span></h1>';}
-function heroTxt(){var p=CT.heroPos,ok=p&&isFinite(+p.x)&&isFinite(+p.y);
-  if(!ok)return '<div class="txt wrap"><div class="tin">'+heroH1()+'</div></div>';
-  var x=Math.max(0,Math.min(100,+p.x)),y=Math.max(0,Math.min(100,+p.y)),al=x<34?'left':(x>66?'right':'center');
-  return '<div class="txt wrap pos'+(x>60?' pr':'')+'" style="--x:'+x+'%;--y:'+y+'%;--al:'+al+'"><div class="tin">'+heroH1()+'</div></div>';}
+/* 첫 화면 제목: 큰 제목(heroB)과 작은 문구(heroSubT)를 따로 입력. 작은 문구는 큰 제목 아래 오른쪽 끝에 붙어 함께 움직이고(기본),
+   CT.subFree 이면 CT.subPos 로 따로 놓는다. 글꼴(CT.heroFont {t,s})과 크기(CT.heroSize {t,s}, PC 기준 px)도 관리자에서 정한다. */
+var HFONTS={serif:["'Noto Serif KR',serif",''],sans:["'Noto Sans KR',sans-serif",''],nmj:["'Nanum Myeongjo','Noto Serif KR',serif",'Nanum+Myeongjo:wght@400;700'],
+  gowun:["'Gowun Batang','Noto Serif KR',serif",'Gowun+Batang:wght@400;700'],ngo:["'Nanum Gothic','Noto Sans KR',sans-serif",'Nanum+Gothic:wght@400;700'],
+  corm:["'Cormorant Garamond','Noto Serif KR',serif",'Cormorant+Garamond:wght@300;400;500'],play:["'Playfair Display','Noto Serif KR',serif",'Playfair+Display:wght@400;500']};
+function hfont(k){var f=HFONTS[k];if(!f)return '';if(f[1]&&!document.getElementById('hf-'+k)){var l=document.createElement('link');l.id='hf-'+k;l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+f[1]+'&display=swap';document.head.appendChild(l);}return f[0];}
+function heroParts(){var t=(CT.tx&&CT.tx.heroB!=null&&CT.tx.heroB!=='')?String(CT.tx.heroB):TX.heroB.d,s=CT.tx&&CT.tx.heroSubT;
+  if(s==null){if(CT.heroSub!=='same'&&t.indexOf('\n')>=0){var L=t.split('\n');t=L[0];s=L.slice(1).join('\n');}else s='';}
+  return [t,String(s)];}
+function hpos(p,dx,dy){var ok=p&&isFinite(+p.x)&&isFinite(+p.y);var x=ok?Math.max(0,Math.min(100,+p.x)):dx,y=ok?Math.max(0,Math.min(100,+p.y)):dy;return {x:x,y:y,al:x<34?'left':(x>66?'right':'center'),set:ok};}
+function hstyle(w){var F=CT.heroFont||{},Z=CT.heroSize||{},st='',f=hfont(F[w]),z=+Z[w];
+  if(f)st+='--hf'+w+':'+f.replace(/"/g,"'")+';';if(z>=8&&z<=140)st+='--hz'+w+':'+z+';';return st;}
+function heroTxt(){
+  var P=heroParts(),t=P[0],sb=P[1].trim()?P[1]:'',free=CT.subFree===true&&sb,tp=hpos(CT.heroPos,0,100),sp=hpos(CT.subPos,100,100);
+  var cls='txt wrap'+((tp.set||free)?' pos':'')+((tp.set&&tp.x>60)||(free&&sp.x>60)?' pr':'');
+  var st='--x:'+tp.x+'%;--y:'+tp.y+'%;--al:'+tp.al+';--sx:'+sp.x+'%;--sy:'+sp.y+'%;--sal:'+sp.al+';'+hstyle('t')+hstyle('s');
+  var l1='<span class="l1">'+esc(t).replace(/\n/g,'<br>')+'</span>',sub=esc(sb).replace(/\n/g,'<br>');
+  var h1='<h1 class="hsub"><span class="ht">'+l1+(sb&&!free?'<span class="l2">'+sub+'</span>':'')+'</span></h1>';
+  return '<div class="'+cls+'" style="'+st+'"><div class="tin">'+h1+(free?'<p class="sub2">'+sub+'</p>':'')+'</div></div>';}
 function hsList(){var L=(CT.hs&&CT.hs.length)?CT.hs:HS.map(function(k){return ['m'+k,'m'+k+'n'];});return L.filter(function(p){return p&&p[0]&&p[1];}).map(function(p){return [hsSame(p[0]),hsSame(p[1])];});}
 function hsImg(t,x,eager){
   var u=CT.up&&CT.up[x];
@@ -868,6 +887,7 @@ var TX={
  introA1:{g:'hero',v:'a',l:'시안 A · 소개 큰 문장',d:'구조와 동선을 먼저 설계하고,\n마감은 그 다음에 고릅니다.',at:'#about'},
  introA2:{g:'hero',v:'a',l:'시안 A · 소개 작은 문장',d:'전국의 아파트를\n오래 살아도 편안한 집으로 다시 짓습니다.',at:'#about'},
  heroB:{g:'hero',v:'b',l:'첫 화면 큰 제목',d:'빛이 켜지는 순간,\n집이 완성됩니다.'},
+ heroSubT:{g:'hero',v:'b',l:'첫 화면 작은 문구 (큰 제목 아래)',d:''},
  introB:{g:'hero',v:'b',l:'소개 문장',d:'구조와 동선을 먼저 설계하고, 빛으로 마무리합니다.',at:'#about'},
  ctaB:{g:'hero',v:'b',l:'아래쪽 상담 문장',d:'우리 집의 밤을 상상해 보세요.',at:'#cta'},
  sideC:{g:'hero',v:'c',l:'시안 C · 왼쪽 소개 문장',d:'구조와 동선을 먼저 설계하는\n전국의 아파트 인테리어'},
