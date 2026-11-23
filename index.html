@@ -324,9 +324,10 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
 .B .row .tx{flex:1 1 240px}
 .B .row:nth-child(even){flex-direction:row-reverse}
 .B .row .nm{font-size:clamp(24px,2.6vw,34px)}
-.B .wkonly .row{margin-top:56px;justify-content:center}
-.B .wkonly .row:nth-child(even){flex-direction:row}
-.B .wkonly .row:first-child{margin-top:32px}
+.B .wkonly{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:32px}
+.B .wkonly .row{display:block;margin:0}
+.B .wkonly .row .img{max-width:none;width:100%}
+@media (max-width:600px){.B .wkonly{grid-template-columns:minmax(0,1fr);gap:8px}}
 .B .wkonly .img{cursor:zoom-in}
 .B .wkonly .img:focus-visible{outline:2px solid #1C1A18;outline-offset:4px}
 /* 큰 사진 팝업 */
@@ -914,8 +915,8 @@ var B={
  home:function(){
   var h='<div class="'+BCLS()+'"><section class="hero" aria-label="대표 이미지">'+blhero()+'<div class="bshade"></div>'+hdr(BV,'home',true)+''+heroTxt()+(String((CT.tx&&CT.tx.lightHint!=null)?CT.tx.lightHint:TX.lightHint.d).trim()?'<p class="lhint" aria-hidden="true">'+tx('lightHint')+'</p>':'')+'</section>';
   h+='<section class="wrap sec" id="about" style="max-width:900px"><p class="muted" style="margin:0;font-size:13px;letter-spacing:.24em">LINN &amp; J STUDIO</p><p style="margin:22px 0 0;font-size:clamp(22px,2.6vw,32px);line-height:1.7">'+tx('introB')+'</p></section>';
-  h+='<section class="wrap sec" id="hwk"><h2>Works</h2><div class="wkonly">'+ORDER.filter(function(k){return !homeHidden(k);}).map(function(k,i){var p=P[k],rw=homeRow(p);var media=(typeof rw==='string')?pic(rw,'r32',p.name):light(rw,'r32',p.name,true);return '<div class="row"><div class="img" data-lb="'+p.id+'" role="button" tabindex="0" aria-label="'+p.name+' 사진 크게 보기">'+media+'</div></div>';}).join('')+'</div><div style="margin-top:56px;text-align:center"><a class="btn" href="#'+BV+'-works">ALL WORKS</a></div></section>';
-  var hb=homeList('ba');if(hb.length)h+='<section class="wrap sec" id="hba"><h2>Before / After</h2><p class="muted" style="margin:10px 0 24px;font-size:14px">가운데 막대를 좌우로 밀어 보세요.</p>'+hb.map(function(t,i){return '<div class="mid" style="max-width:980px'+(i?';margin-top:40px':'')+'">'+ba([t[0],t[1],t[2]||'공사'])+'</div>';}).join('')+'</section>';
+  h+='<section class="wrap sec" id="hwk"><h2>Works</h2><div class="wkonly">'+ORDER.filter(function(k){return !homeHidden(k);}).map(function(k,i){var p=P[k],rw=homeRow(p);var media=(typeof rw==='string')?pic(rw,'r11',p.name):light(rw,'r11',p.name);return '<div class="row"><div class="img" data-lb="'+p.id+'" role="button" tabindex="0" aria-label="'+p.name+' 사진 크게 보기">'+media+'</div></div>';}).join('')+'</div><div style="margin-top:56px;text-align:center"><a class="btn" href="#'+BV+'-works">ALL WORKS</a></div></section>';
+  var hb=homeList('ba');if(hb.length)h+='<section class="wrap sec" id="hba"><h2>Before / After</h2><p class="muted" style="margin:10px 0 24px;font-size:14px">가운데 막대를 좌우로 밀어 보세요.</p>'+hb.map(function(t,i){return '<div'+(i?' style="margin-top:40px"':'')+'>'+ba([t[0],t[1],t[2]||'공사'])+'</div>';}).join('')+'</section>';
   var hl=homeList('light');if(hl.length)h+='<section class="wrap sec" id="hlt"><div class="grid2">'+hl.map(function(t){return lightOr([t[0],t[1]],'r32',t[2]||'공간');}).join('')+'</div></section>';
   h+=aboutBlock()+processBlock();
   h+='<section class="wrap sec" id="cta" style="text-align:center"><p style="margin:0;font-size:clamp(22px,2.4vw,30px)">'+tx('ctaB')+'</p><div style="margin-top:28px"><a class="btn" href="#'+BV+'-contact">상담 신청</a></div></section>'+foot()+'</div>';
