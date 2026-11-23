@@ -623,7 +623,7 @@ function hsImg(t,x,eager){
   var u=CT.up&&CT.up[x];
   /* 관리자에서 올린 사진(구글 드라이브): 휴대폰은 1600px, PC는 3200px 로 받아 선명하게 */
   if(u&&/drive\.google\.com\/thumbnail/.test(u)){var a=u.replace(/sz=w\d+/,'sz=w1600'),b=u.replace(/sz=w\d+/,'sz=w3200');return t.replace('src="'+u+'"','src="'+a+'" srcset="'+a+' 1600w, '+b+' 3200w" sizes="100vw"');}
-  return t.replace('src="img/'+x+'.jpg"','src="img/'+x+'-m.jpg" srcset="img/'+x+'-m.jpg 1280w, img/'+x+'.jpg 2400w" sizes="100vw"');}
+  return t.replace('src="img/'+x+'.jpg"','src="img/'+x+'-m.jpg" srcset="img/'+x+'-m.jpg 1600w, img/'+x+'.jpg 3200w" sizes="100vw"');}
 function blhero(){
   var h='<div class="hs" id="hs" aria-roledescription="carousel" aria-label="시공 현장 사진"><div class="hs-track">';
   var HL=hsList();
