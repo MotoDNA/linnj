@@ -282,6 +282,7 @@ var MENU=[
   ['contact','CONTACT','연락처 · 상담 안내 · 상담 접수함'],
   ['youtube','YOUTUBE','유튜브 채널 주소'],
   ['blog','BLOG','블로그 주소'],
+  ['instagram','INSTAGRAM','인스타그램 주소'],
   ['cap','그 밖에'],
   ['texts','홈페이지 문구','첫 화면 문구 · 회사 정보'],
   ['request','수정 요청','디자인·기능 수정을 제작사(디엔에이랩스)에 요청하기'],
@@ -468,6 +469,8 @@ V.hero=function(b){
     '<div class="hsl">'+L.map(function(p,i){var miss=!p[0]||!p[1];return '<div class="hsr'+(miss?' miss':'')+'"><span class="no">'+(i+1)+'</span><div style="flex:1 1 auto;min-width:0">'+pairEdit(p,i)+(miss?'<span class="warn">사진 두 장(꺼짐·켜짐)이 모두 있어야 홈페이지에 나옵니다.</span>':'')+'</div>'+
       '<div class="ctl"><button class="btn sm" type="button" data-mv="-1" data-i="'+i+'" aria-label="'+(i+1)+'번 위로" '+(i?'':'disabled')+'>▲</button><button class="btn sm" type="button" data-mv="1" data-i="'+i+'" aria-label="'+(i+1)+'번 아래로" '+(i<L.length-1?'':'disabled')+'>▼</button><button class="btn sm del" type="button" data-rm="'+i+'" '+(L.length>1?'':'disabled title="사진이 1장은 있어야 해요"')+'>빼기</button></div></div>';}).join('')+'</div>'+
     '<p class="hint" style="margin:12px 0 0">사진이 많을수록 한 바퀴 도는 시간이 길어집니다. 6~8장을 권해요. (최대 '+HS_MAX+'장)</p></div>'+
+    '<div class="card"><h3>조명이 켜져 있을 때</h3><p class="hint">홈페이지에서 사진 오른쪽에 마우스를 두거나 전구 버튼을 눌러 조명을 켰을 때 어떻게 할지 정합니다.</p>'+
+    '<div class="row" style="gap:6px;flex-wrap:wrap">'+[['stop','멈추기 (조명을 끄면 이어서 넘어감)'],['go','계속 넘어가기']].map(function(o){var on=(DRAFT.hsLitGo===true)===(o[0]==='go');return '<button class="btn sm" type="button" data-litgo="'+o[0]+'"'+(on?' style="background:#1C1A18;color:#fff;border-color:#1C1A18"':'')+'>'+o[1]+'</button>';}).join('')+'</div></div>'+
     '<div class="card"><h3>넘어가는 속도</h3><p class="hint">사진 한 장이 화면에 머무는 시간입니다. 2초부터 12초까지 정할 수 있어요. (처음 설정: 5초)</p>'+
     '<div class="row" style="gap:14px;align-items:center"><input type="range" id="hsSec" min="2" max="12" step="1" value="'+hsSecCur()+'" style="flex:1;max-width:420px" aria-label="넘어가는 속도(초)"><b id="hsSecV" style="min-width:56px;font-size:18px">'+hsSecCur()+'초</b>'+
     (DRAFT.hsSec!=null&&+DRAFT.hsSec!==5?'<button class="btn link" type="button" id="hsSecDef">5초로</button>':'')+'</div>'+
@@ -500,6 +503,7 @@ V.hero=function(b){
       var p=libCur()[+x.dataset.libdel],mine=p&&!hsHas(DEF.hsLib,p);
       if(!confirm(mine?'이 사진 쌍을 목록에서 지울까요? 직접 올린 사진이라 지우면 다시 되살릴 수 없어요. (저장 기록으로는 되돌릴 수 있어요)':'이 사진 쌍을 목록에서 지울까요? 제작사가 준비한 사진이라 「지운 사진 되살리기」로 다시 꺼낼 수 있어요.'))return;
       libOwn().splice(+x.dataset.libdel,1);changed();draw2();toast('준비된 사진에서 지웠어요. 저장하기를 눌러야 반영됩니다.');});});
+    b.querySelectorAll('[data-litgo]').forEach(function(x){x.addEventListener('click',function(){if(x.dataset.litgo==='go')DRAFT.hsLitGo=true;else delete DRAFT.hsLitGo;changed();draw2();where('','#hs');toast(x.dataset.litgo==='go'?'조명이 켜져 있어도 넘어가요. 저장하기를 눌러야 반영됩니다.':'조명이 켜져 있으면 멈춰요. 저장하기를 눌러야 반영됩니다.');});});
     var sr=b.querySelector('#hsSec');
     function setSec(n){n=Math.max(2,Math.min(12,Math.round(+n)||5));if(n===5)delete DRAFT.hsSec;else DRAFT.hsSec=n;changed();}
     sr.addEventListener('input',function(){b.querySelector('#hsSecV').textContent=sr.value+'초';});
@@ -614,6 +618,7 @@ function linkView(b,key,label,hint,ph){
   where('','header');
 }
 V.youtube=function(b){linkView(b,'yt','유튜브','메뉴의 YOUTUBE와 맨 아래 링크가 이 주소로 연결됩니다. 현장별 영상은 WORKS › 현장 수정에서 넣어요.','https://www.youtube.com/@...');};
+V.instagram=function(b){linkView(b,'ig','인스타그램','메뉴의 INSTAGRAM과 맨 아래 링크가 이 주소로 연결됩니다. 주소를 넣기 전에는 눌러도 아무 데도 가지 않아요.','https://www.instagram.com/...');};
 V.blog=function(b){linkView(b,'blog','블로그','메뉴의 BLOG와 맨 아래 링크가 이 주소로 연결됩니다.','https://blog.naver.com/...');};
 
 /* 첫 화면 큰 제목 위치: 9칸 중 하나를 누르거나, 막대로 가로·세로를 세밀하게. 바꾸면 미리보기에 바로 보임 */
