@@ -324,6 +324,39 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
 .B .row .tx{flex:1 1 240px}
 .B .row:nth-child(even){flex-direction:row-reverse}
 .B .row .nm{font-size:clamp(24px,2.6vw,34px)}
+.B .wkonly .row{margin-top:56px;justify-content:center}
+.B .wkonly .row:nth-child(even){flex-direction:row}
+.B .wkonly .row:first-child{margin-top:32px}
+.B .wkonly .img{cursor:zoom-in}
+.B .wkonly .img:focus-visible{outline:2px solid #1C1A18;outline-offset:4px}
+/* 큰 사진 팝업 */
+html.lbx-open{overflow:hidden}
+html.lbx-open .fab{visibility:hidden}
+.lbx{position:fixed;inset:0;z-index:300;background:rgba(10,9,8,.92);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .22s}
+.lbx.in{opacity:1}
+.lbx-in{position:relative;width:min(100vw,150vh)}
+.lbx-ph{position:relative;aspect-ratio:3/2;background:#111;-webkit-touch-callout:none;user-select:none;cursor:zoom-out}
+.lbx-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.lbx-ph img.on{opacity:0;transition:opacity .5s}
+.lbx-ph.lit img.on{opacity:1}
+.lbx-ph::after{content:"";position:absolute;left:0;right:0;bottom:0;height:24%;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.5));pointer-events:none}
+.lbx-bulb{z-index:2}.lbx-bar{z-index:2}
+.lbx-bulb{position:absolute;left:18px;bottom:18px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:rgba(0,0,0,.35);display:grid;place-items:center;cursor:pointer;padding:0}
+.lbx-ph.lit .lbx-bulb{background:rgba(255,255,255,.25)}
+.lbx-bar{position:absolute;right:0;bottom:0;padding:22px 26px}
+.lbx-go{color:#fff;font-size:14px;letter-spacing:.08em;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.7);padding-bottom:3px;text-shadow:0 1px 6px rgba(0,0,0,.55)}
+.lbx-go:hover{border-bottom-color:#fff}
+.lbx-x{position:fixed;top:12px;right:14px;width:44px;height:44px;border:0;background:none;color:#fff;font-size:30px;line-height:1;cursor:pointer;opacity:.85}
+.lbx-x:hover{opacity:1}
+/* 휴대폰: 사진 아래 검정 띠, 글자는 오른쪽 */
+@media (max-width:600px),(hover:none) and (max-width:1024px){
+ .lbx{background:rgba(10,9,8,.94)}
+ .lbx-in{width:min(100vw,calc((100vh - 40px) * 1.5))}
+ .lbx-bar{position:static;background:#000;padding:6px 12px;text-align:right}
+ .lbx-go{font-size:12px;border-bottom:0;text-decoration:underline;text-underline-offset:3px;text-shadow:none;letter-spacing:.04em}
+ .lbx-bulb{left:10px;bottom:10px;width:34px;height:34px}
+ .lbx-ph::after{display:none}
+}
 .B .btn{display:inline-flex;align-items:center;min-height:52px;padding:0 36px;border:1px solid #ECE8E1;color:#ECE8E1;background:transparent;text-decoration:none;font-size:13px;letter-spacing:.14em;cursor:pointer}
 .B footer{border-color:#2E2B28;color:#A39A8E}
 .B .idx{display:grid;grid-template-columns:72px 1fr 120px;gap:20px;align-items:center;padding:20px 0;border-bottom:1px solid #2E2B28;text-decoration:none}
@@ -461,7 +494,19 @@ var P={
 var ORDER=['zenith','gangseon','cheongwon','wicity','unjeong','munchon'];
 var PENDING=[];
 /* 원본 해상도가 높은 사진(긴 변 1600px 이상)만 첫 화면·전체폭에 사용 */
-var HI={z070:2000,g001:2000,g002:2000,g003:2000,m93:1800};
+var HI={z070:2000,g001:2000,g002:2000,g003:2000,m93:1800,x01:1600,x01n:1600,x02:1600,x02n:1600,x03:1600,x03n:1600};
+/* 메인(About) Works 칸 사진: 원본에서 새로 만든 고해상도 조명 꺼짐/켜짐 짝 (없으면 현장 기본 사진) */
+var WKO={zenith:['x01','x01n'],wicity:['x02','x02n'],unjeong:['x03','x03n']};
+function BIG(k){var u=CT.up&&CT.up[k];if(u)return /sz=w\d+/.test(u)?u.replace(/sz=w\d+/,'sz=w3200'):u;return HI[k]?'img/hi/'+k+'.jpg':IMG(k);}
+/* 메인(About) 페이지 사진: 관리자에서 바꾼 값(CT.home)이 있으면 그것, 없으면 처음 사진 */
+var HOMEDEF={ba:[['w235','w225','위시티 거실']],light:[['z012','z013','위브더제니스 거실'],['c008','c009','청원레이크빌 거실']]};
+function full2(p){return p&&p[0]&&p[1];}
+function any2(p){return p&&(p[0]||p[1]);}
+/* 조명 짝: 두 장이면 조명 효과, 한 장(꺼짐 또는 켜짐)만 있으면 그 사진만 */
+function lightOr(pr,ratio,alt,zoned,kind){if(pr[0]&&pr[1])return light(pr,ratio,alt,zoned,kind);var k=pr[0]||pr[1];return k?pic(k,ratio,alt):'';}
+function homeRow(p){var r=CT.home&&CT.home.rows&&CT.home.rows[p.id];if(r&&(r[0]||r[1]))return (r[0]&&r[1])?[r[0],r[1]]:(r[0]||r[1]);return WKO[p.id]||p.row;}
+function homeHidden(id){return !!(CT.home&&CT.home.hide&&CT.home.hide.indexOf(id)>=0);}
+function homeList(k){var v=CT.home&&CT.home[k];return (Array.isArray(v)?v:HOMEDEF[k]).filter(k==='ba'?full2:any2);}
 var HERO=[['z070','zenith'],['g001','gangseon'],['m93','munchon'],['w205','wicity'],['g003','gangseon'],['c013','cheongwon']];
 P.wicity.row=['w229','w231'];P.munchon.row=['m247','m249'];P.unjeong.row='u200';
 /* 현장별 유튜브 영상 (채널에 올라온 현장만) */
@@ -494,13 +539,44 @@ function offImg(k){return (CT.up&&CT.up[k])||(LO[k]?'img/'+k+'o.jpg':IMG(k));}
 function light(pair,ratio,alt,zoned,kind){
   var dr=kind==='door',L0=dr?'문 열어 두기':'전체 조명 켜기',L1=dr?'문 닫기':'전체 조명 끄기';
   var z=zoned&&ZN[pair[0]];
-  return '<div class="lt'+(z?' lz':'')+' '+(ratio||'r32')+'"'+(z?' data-zn="'+z.join(',')+'"':'')+'><img src="'+offImg(pair[0])+'"'+(z&&!LO[pair[0]]?SS(pair[0]):'')+' alt="'+(alt||'공간')+' — 마우스를 올리거나 사진을 누르면 '+(dr?'문이 열립니다':(z?'그 구역의 ':'')+'조명이 켜집니다')+'" loading="lazy"><img class="on-img" src="'+IMG(pair[1])+'"'+(z?SS(pair[1]):'')+' alt="" loading="lazy"><button type="button" class="bulb" aria-pressed="false" aria-label="'+L0+'" data-l0="'+L0+'" data-l1="'+L1+'"><i>'+(dr?DOOR:BULB)+'</i></button></div>';
+  return '<div class="lt'+(z?' lz':'')+' '+(ratio||'r32')+'"'+(z?' data-zn="'+z.join(',')+'"':'')+'><img src="'+offImg(pair[0])+'"'+(!LO[pair[0]]&&(z||HI[pair[0]])?SS(pair[0]):'')+' alt="'+(alt||'공간')+' — 마우스를 올리거나 사진을 누르면 '+(dr?'문이 열립니다':(z?'그 구역의 ':'')+'조명이 켜집니다')+'" loading="lazy"><img class="on-img" src="'+IMG(pair[1])+'"'+((z||HI[pair[1]])?SS(pair[1]):'')+' alt="" loading="lazy"><button type="button" class="bulb" aria-pressed="false" aria-label="'+L0+'" data-l0="'+L0+'" data-l1="'+L1+'"><i>'+(dr?DOOR:BULB)+'</i></button></div>';
 }
 function ba(t,ratio){
   return '<div class="ba '+(ratio||'r32')+'"><img src="'+IMG(t[1])+'" alt="'+t[2]+' 공사 후" loading="lazy"><div class="bw" style="clip-path:inset(0 50% 0 0)"><img src="'+IMG(t[0])+'" alt="'+t[2]+' 공사 전" loading="lazy"></div><span class="lb" style="left:14px">BEFORE</span><span class="lb" style="right:14px">AFTER</span><div class="bar" style="left:50%"></div><div class="knob" style="left:50%">'+ARROWS+'</div><input type="range" min="0" max="100" value="50" aria-label="'+t[2]+' 공사 전후 비교, 좌우로 조절"></div>';
 }
 function pic(k,ratio,alt,big){return '<img class="cover '+(ratio||'')+'" data-k="'+k+'" src="'+IMG(k)+'"'+(big?SS(k):'')+' alt="'+(alt||'')+'" loading="lazy">';}
 function esc(s){return s;}
+
+/* ---- 큰 사진 팝업 (메인 Works) ----
+   PC: 화면 가로에 맞춘 큰 사진, 오른쪽 아래 글자를 누르면 그 현장 상세 페이지로.
+   휴대폰: 가로 꽉 찬 사진 아래 검정 띠, 오른쪽 글자를 누르면 상세 페이지로. 꾹 누르면 조명.
+   닫기: 사진 바깥 누르기, 뒤로 가기, Esc·Backspace 키, 오른쪽 위 ×. */
+var LBX=null;
+function openLB(id,lit){
+  var p=P[id];if(!p||LBX)return;
+  var rw=homeRow(p),pair=(typeof rw==='string')?[rw]:rw,two=pair.length>1;
+  var o=document.createElement('div');o.className='lbx';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label',p.name+' 사진 크게 보기');
+  o.innerHTML='<div class="lbx-in"><div class="lbx-ph'+(lit&&two?' lit':'')+'"><img src="'+(two&&LO[pair[0]]?offImg(pair[0]):BIG(pair[0]))+'" alt="'+p.name+'">'+(two?'<img class="on" src="'+BIG(pair[1])+'" alt="">':'')+
+    (two?'<button type="button" class="lbx-bulb" aria-pressed="'+(lit?'true':'false')+'" aria-label="전체 조명 켜기/끄기">'+BULB+'</button>':'')+'</div>'+
+    '<div class="lbx-bar"><a class="lbx-go" href="#'+BV+'-'+p.id+'" aria-label="'+p.name+' 상세 페이지로">Detail →</a></div></div><button type="button" class="lbx-x" aria-label="닫기">×</button>';
+  document.body.appendChild(o);LBX={el:o,go:null};
+  document.documentElement.classList.add('lbx-open');
+  requestAnimationFrame(function(){o.classList.add('in');});
+  try{history.pushState({lbx:1},'');}catch(_){}
+  var ph=o.querySelector('.lbx-ph'),bb=o.querySelector('.lbx-bulb'),held=function(){return false;};
+  function setLit(v){ph.classList.toggle('lit',v);if(bb)bb.setAttribute('aria-pressed',v?'true':'false');}
+  if(bb){bb.addEventListener('click',function(e){e.stopPropagation();setLit(!ph.classList.contains('lit'));});
+    var was=false;held=holdTouch(ph,bb,function(){was=ph.classList.contains('lit');setLit(true);},function(){},function(){setLit(was);});}
+  ph.addEventListener('contextmenu',function(e){e.preventDefault();});
+  o.addEventListener('click',function(e){if(e.target.closest('.lbx-go,.lbx-bulb'))return;if(held())return;closeLB();});
+  o.querySelector('.lbx-go').addEventListener('click',function(e){e.preventDefault();LBX.go=this.getAttribute('href');closeLB();});
+  setTimeout(function(){try{o.querySelector('.lbx-x').focus({preventScroll:true});}catch(_){}} ,50);
+}
+function closeLB(){if(!LBX)return;if(history.state&&history.state.lbx){history.back();}else{shutLB();}}
+function shutLB(){if(!LBX)return;var x=LBX;LBX=null;document.documentElement.classList.remove('lbx-open');x.el.classList.remove('in');setTimeout(function(){x.el.remove();},220);
+  if(x.go)setTimeout(function(){location.hash=x.go;},0);}
+window.addEventListener('popstate',function(){if(LBX)shutLB();});
+document.addEventListener('keydown',function(e){if(!LBX)return;if(e.key==='Escape'||(e.key==='Backspace'&&!/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||'')))){e.preventDefault();closeLB();}});
 
 /* ---- behaviour wiring ---- */
 function wire(root){
@@ -510,6 +586,13 @@ function wire(root){
     var t0=0;
     el.addEventListener('pointerdown',function(){t0=Date.now();});
     el.addEventListener('click',function(e){if(e.target.closest('.bulb'))return;if(Date.now()-t0>280)return;location.hash=el.getAttribute('data-href');});
+  });
+  /* 메인 Works 사진: 누르면 큰 사진 팝업 (전구 버튼·꾹 누르기는 조명) */
+  root.querySelectorAll('[data-lb]').forEach(function(el){
+    var t0=0;
+    el.addEventListener('pointerdown',function(){t0=Date.now();});
+    el.addEventListener('click',function(e){if(e.target.closest('.bulb'))return;if(Date.now()-t0>600)return;var lt=el.querySelector('.lt');openLB(el.getAttribute('data-lb'),!!(lt&&lt.classList.contains('on')));});
+    el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openLB(el.getAttribute('data-lb'),false);}});
   });
   root.querySelectorAll('.cols2,.cols3,.mason').forEach(masonry);
   root.querySelectorAll('.strip').forEach(function(el){
@@ -549,7 +632,7 @@ function wire(root){
     /* 휴대폰(아이폰 포함): 마우스 오버가 없으므로 사진을 한 번 톡 누르면 조명이 켜지고, 다시 누르면 꺼짐 */
     var wasHold=holdTouch(el,bulb,function(x){mute=false;lit=true;lx=x;paint(zoneAt(x));},function(x){lx=x;paint(zoneAt(x));},function(){lit=false;paint(-1);});
     el.addEventListener('pointerdown',function(e){pt=e.pointerType;});
-    el.addEventListener('click',function(e){if(wasHold()){e.preventDefault();e.stopPropagation();return;}if((pt!=='mouse'||NOHOV())&&!bulb.contains(e.target)&&!el.closest('[data-href]'))bulb.click();});
+    el.addEventListener('click',function(e){if(wasHold()){e.preventDefault();e.stopPropagation();return;}if((pt!=='mouse'||NOHOV())&&!bulb.contains(e.target)&&!el.closest('[data-href],[data-lb]'))bulb.click();});
     el.addEventListener('contextmenu',function(e){e.preventDefault();});
   });
   /* 시안 B 첫 화면: 화면 가운데 기준 왼쪽은 불 꺼짐, 오른쪽은 불 켜짐 (사진 전체가 한꺼번에) */
@@ -575,7 +658,7 @@ function wire(root){
     el.addEventListener('pointerleave',function(e){if(e.pointerType==='mouse')set(false);clearTimeout(t);});
     var wasHold=holdTouch(el,bulb,function(){set(true);},function(){},function(){set(false);});
     el.addEventListener('pointerdown',function(e){pt=e.pointerType;});
-    el.addEventListener('click',function(e){if(wasHold()){e.preventDefault();e.stopPropagation();return;}if((pt!=='mouse'||NOHOV())&&!bulb.contains(e.target)&&!el.closest('[data-href]'))bulb.click();});
+    el.addEventListener('click',function(e){if(wasHold()){e.preventDefault();e.stopPropagation();return;}if((pt!=='mouse'||NOHOV())&&!bulb.contains(e.target)&&!el.closest('[data-href],[data-lb]'))bulb.click();});
     el.addEventListener('contextmenu',function(e){e.preventDefault();});
   });
   root.querySelectorAll('.ba').forEach(function(el){
@@ -694,8 +777,8 @@ function heroFix(){var tx=document.querySelector('.B .hero .txt.pos');if(!tx)ret
   s.style.translate='0 '+Math.round(ds)+'px';if(dh)h.style.translate='0 '+Math.round(dh)+'px';}
 (function(){var t;addEventListener('resize',function(){clearTimeout(t);t=setTimeout(heroFix,80);});if(document.fonts&&document.fonts.ready)document.fonts.ready.then(heroFix);})();
 function hsList(){var D=HS.map(function(k){return ['m'+k,'m'+k+'n'];}),L=(CT.hs&&CT.hs.length)?CT.hs:D;
-  /* 사진이 한 장 빠진 쌍(관리자에서 지운 칸)은 건너뜀. 모두 비면 처음 사진 */
-  L=L.filter(function(p){return p&&p[0]&&p[1];});if(!L.length)L=D;return L.map(function(p){return [hsSame(p[0]),hsSame(p[1])];});}
+  /* 한 장만 있는 쌍은 그 사진을 꺼짐·켜짐 양쪽에 씀(조명 효과 없음). 두 장 다 빈 쌍은 건너뜀. 모두 비면 처음 사진 */
+  L=L.filter(function(p){return p&&(p[0]||p[1]);});if(!L.length)L=D;return L.map(function(p){return [hsSame(p[0]||p[1]),hsSame(p[1]||p[0])];});}
 function hsImg(t,x,eager){
   var u=CT.up&&CT.up[x];
   /* 관리자에서 올린 사진(구글 드라이브): 휴대폰은 1600px, PC는 3200px 로 받아 선명하게 */
@@ -788,10 +871,11 @@ function projectBody(v,p,opt){
   h+='<section class="wrap" style="padding-top:'+(opt.top||'72px')+'"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px"><div><h1 style="margin:0;font-size:clamp(36px,5vw,60px);font-weight:300">'+p.name+'</h1><p class="muted" style="margin:10px 0 0;font-size:15px">'+p.loc+' · '+p.py+' · '+p.type+'</p></div>'+(p.yt?'<a class="ytb" href="https://www.youtube.com/watch?v='+p.yt+'" target="_blank" rel="noopener"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z" fill="currentColor"/></svg>유튜브 영상 보기</a>':'')+'</div></section>';
   var hi=!!HI[p.hero],gal=hi?p.gallery.slice(1):p.gallery;
   h+='<section class="wrap" style="margin-top:40px">'+(hi?'<div style="margin-bottom:16px">'+pic(p.hero,'r32',p.name,true)+'</div>':'')+'<p style="margin:'+(hi?'56px':'8px')+' auto 56px;max-width:560px;text-align:center;font-size:17px;line-height:2">'+p.line+'</p><div class="'+gl+'">'+gal.map(function(k){return pic(k,'',p.name);}).join('')+'</div></section>';
-  if(p.small&&p.small.length){var hasP=p.small.some(function(k){return typeof k!=='string';});h+='<section class="wrap sec"><h2>Details</h2>'+(hasP?'<p class="muted" style="margin:10px 0 0;font-size:14px">전구·문 표시가 있는 사진은 마우스를 올리거나 휴대폰에서 한 번 누르면 조명이 켜지거나 문이 열립니다.</p>':'')+'<div class="dgrid" style="margin-top:24px">'+p.small.map(function(k){return typeof k==='string'?pic(k,'r23',p.name+' 디테일'):light(k.p,'r23',p.name+' 디테일',false,k.k);}).join('')+'</div></section>';}
-  if(p.light.length){h+='<section class="wrap sec"><h2 style="margin-bottom:24px">Light</h2><div class="grid2">'+p.light.map(function(pr){return light(pr,(pr[0]==='m247'||pr[0]==='m249')?'r32':'r32',p.name);}).join('')+'</div></section>';}
-  if(p.ba.length){h+='<section class="wrap sec"><h2>Before / After</h2><p class="muted" style="margin:10px 0 24px;font-size:14px">가운데 막대를 좌우로 밀어 공사 전후를 비교해 보세요.</p><div class="grid2">'+p.ba.map(function(t){return '<div><p class="muted" style="margin:0 0 8px;text-align:right;font-size:13px">'+p.name+' '+p.py+(t[2]?' · '+t[2]:'')+'</p>'+ba(t)+'</div>';}).join('')+'</div></section>';}
-  if(p.before&&p.before.length){h+='<section class="wrap sec"><h2>Before</h2><div class="thumbs" style="margin-top:24px">'+p.before.map(function(k){return pic(k,'r34',p.name+' 공사 전');}).join('')+'</div></section>';}
+  var sm=(p.small||[]).filter(function(k){return typeof k==='string'?!!k:any2(k.p);});p={__proto__:p,small:sm,light:(p.light||[]).filter(any2),ba:(p.ba||[]).filter(full2),before:(p.before||[]).filter(Boolean)};
+  if(p.small&&p.small.length){var hasP=p.small.some(function(k){return typeof k!=='string';});h+='<section class="wrap sec" id="dsmall"><h2>Details</h2>'+(hasP?'<p class="muted" style="margin:10px 0 0;font-size:14px">전구·문 표시가 있는 사진은 마우스를 올리거나 휴대폰에서 한 번 누르면 조명이 켜지거나 문이 열립니다.</p>':'')+'<div class="dgrid" style="margin-top:24px">'+p.small.map(function(k){return typeof k==='string'?pic(k,'r23',p.name+' 디테일'):lightOr(k.p,'r23',p.name+' 디테일',false,k.k);}).join('')+'</div></section>';}
+  if(p.light.length){h+='<section class="wrap sec" id="dlight"><h2 style="margin-bottom:24px">Light</h2><div class="grid2">'+p.light.map(function(pr){return lightOr(pr,'r32',p.name);}).join('')+'</div></section>';}
+  if(p.ba.length){h+='<section class="wrap sec" id="dba"><h2>Before / After</h2><p class="muted" style="margin:10px 0 24px;font-size:14px">가운데 막대를 좌우로 밀어 공사 전후를 비교해 보세요.</p><div class="grid2">'+p.ba.map(function(t){return '<div><p class="muted" style="margin:0 0 8px;text-align:right;font-size:13px">'+p.name+' '+p.py+(t[2]?' · '+t[2]:'')+'</p>'+ba(t)+'</div>';}).join('')+'</div></section>';}
+  if(p.before&&p.before.length){h+='<section class="wrap sec" id="dbefore"><h2>Before</h2><div class="thumbs" style="margin-top:24px">'+p.before.map(function(k){return pic(k,'r34',p.name+' 공사 전');}).join('')+'</div></section>';}
   var i=ORDER.indexOf(p.id),nx=P[ORDER[(i+1)%ORDER.length]];
   h+='<nav class="wrap sec" aria-label="다른 프로젝트" style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font-size:13px;letter-spacing:.1em"><a class="tap muted" href="#'+v+'-works">← ALL WORKS</a><a class="tap" href="#'+v+'-contact">이 프로젝트로 상담하기</a><a class="tap" href="#'+v+'-'+nx.id+'">'+nx.name+' '+nx.py+' →</a></nav>';
   return h;
@@ -830,9 +914,9 @@ var B={
  home:function(){
   var h='<div class="'+BCLS()+'"><section class="hero" aria-label="대표 이미지">'+blhero()+'<div class="bshade"></div>'+hdr(BV,'home',true)+''+heroTxt()+(String((CT.tx&&CT.tx.lightHint!=null)?CT.tx.lightHint:TX.lightHint.d).trim()?'<p class="lhint" aria-hidden="true">'+tx('lightHint')+'</p>':'')+'</section>';
   h+='<section class="wrap sec" id="about" style="max-width:900px"><p class="muted" style="margin:0;font-size:13px;letter-spacing:.24em">LINN &amp; J STUDIO</p><p style="margin:22px 0 0;font-size:clamp(22px,2.6vw,32px);line-height:1.7">'+tx('introB')+'</p></section>';
-  h+='<section class="wrap sec"><h2>Works</h2><div>'+ORDER.map(function(k,i){var p=P[k];var media=(typeof p.row==='string')?'<a href="#'+BV+'-'+p.id+'" style="display:block">'+pic(p.row,'r32',p.name)+'</a>':light(p.row,'r32',p.name,true);return '<div class="row"><div class="img"'+(typeof p.row==='string'?'':' data-href="#'+BV+'-'+p.id+'" style="cursor:pointer"')+'>'+media+'</div><div class="tx"><div class="muted" style="font-size:13px">0'+(i+1)+'</div><div class="nm">'+p.name+'</div><div class="muted" style="margin-top:6px;font-size:14px">'+p.loc+' · '+p.py+'</div><a class="tap" href="#'+BV+'-'+p.id+'" style="margin-top:10px;font-size:13px;letter-spacing:.14em">VIEW PROJECT →</a></div></div>';}).join('')+'</div><div style="margin-top:56px"><a class="btn" href="#'+BV+'-works">ALL WORKS</a></div></section>';
-  h+='<section class="wrap sec"><h2>Before / After</h2><p class="muted" style="margin:10px 0 24px;font-size:14px">가운데 막대를 좌우로 밀어 보세요.</p><div class="mid" style="margin-left:0">'+ba(['w235','w225','위시티 거실'])+'</div></section>';
-  h+='<section class="wrap sec"><div class="grid2">'+light(['z012','z013'],'r32','위브더제니스 거실')+light(['c008','c009'],'r32','청원레이크빌 거실')+'</div></section>';
+  h+='<section class="wrap sec" id="hwk"><h2>Works</h2><div class="wkonly">'+ORDER.filter(function(k){return !homeHidden(k);}).map(function(k,i){var p=P[k],rw=homeRow(p);var media=(typeof rw==='string')?pic(rw,'r32',p.name):light(rw,'r32',p.name,true);return '<div class="row"><div class="img" data-lb="'+p.id+'" role="button" tabindex="0" aria-label="'+p.name+' 사진 크게 보기">'+media+'</div></div>';}).join('')+'</div><div style="margin-top:56px;text-align:center"><a class="btn" href="#'+BV+'-works">ALL WORKS</a></div></section>';
+  var hb=homeList('ba');if(hb.length)h+='<section class="wrap sec" id="hba"><h2>Before / After</h2><p class="muted" style="margin:10px 0 24px;font-size:14px">가운데 막대를 좌우로 밀어 보세요.</p>'+hb.map(function(t,i){return '<div class="mid" style="max-width:980px'+(i?';margin-top:40px':'')+'">'+ba([t[0],t[1],t[2]||'공사'])+'</div>';}).join('')+'</section>';
+  var hl=homeList('light');if(hl.length)h+='<section class="wrap sec" id="hlt"><div class="grid2">'+hl.map(function(t){return lightOr([t[0],t[1]],'r32',t[2]||'공간');}).join('')+'</div></section>';
   h+=aboutBlock()+processBlock();
   h+='<section class="wrap sec" id="cta" style="text-align:center"><p style="margin:0;font-size:clamp(22px,2.4vw,30px)">'+tx('ctaB')+'</p><div style="margin-top:28px"><a class="btn" href="#'+BV+'-contact">상담 신청</a></div></section>'+foot()+'</div>';
   return h;
@@ -929,16 +1013,17 @@ var TX={
 };
 var CT={};                 /* 관리자에서 저장한 내용 */
 function tx(k){var v=(CT.tx&&CT.tx[k]!=null&&CT.tx[k]!=='')?CT.tx[k]:TX[k].d;return esc(v).replace(/\n/g,'<br>');}
-var WF=['name','py','band','loc','type','line','yt','hero','cover','gallery'];   /* 관리자에서 고칠 수 있는 현장 정보 */
+var WF=['name','py','band','loc','type','line','yt','hero','cover','gallery','light','ba','before','small'];
+var WFA={gallery:1,light:1,ba:1,before:1,small:1};   /* 사진 목록(배열) 칸 */   /* 관리자에서 고칠 수 있는 현장 정보 */
 var DEF=null;
 function snapDefaults(){
   if(DEF)return;
-  var w={};ORDER.forEach(function(id){var p=P[id],o={id:id};WF.forEach(function(f){o[f]=Array.isArray(p[f])?p[f].slice():(p[f]||'');});w[id]=o;});
+  var w={};ORDER.forEach(function(id){var p=P[id],o={id:id};WF.forEach(function(f){o[f]=Array.isArray(p[f])?JSON.parse(JSON.stringify(p[f])):(WFA[f]?[]:(p[f]||''));});w[id]=o;});
   DEF={order:ORDER.slice(),works:w,proc:PROC.map(function(x){return x.slice();}),facts:FACTS.map(function(x){return x.slice();}),yt:YT,blog:BLOG,ig:IG,hero:HERO.slice(),dt:DTILES.slice(),row:{}};
   ORDER.forEach(function(id){DEF.row[id]=P[id].row;});
 }
 function ljDefaults(){snapDefaults();var t={};for(var k in TX)t[k]={g:TX[k].g,v:TX[k].v||'',l:TX[k].l,d:TX[k].d,big:!!TX[k].big,one:!!TX[k].one,at:TX[k].at||'',page:TX[k].page||''};
-  return JSON.parse(JSON.stringify({tx:t,order:DEF.order,works:DEF.order.map(function(id){return DEF.works[id];}),proc:DEF.proc,facts:DEF.facts,yt:DEF.yt,blog:DEF.blog,ig:DEF.ig,hs:HS.map(function(k){return ['m'+k,'m'+k+'n'];}),hsLib:HSLIB}));}
+  return JSON.parse(JSON.stringify({tx:t,order:DEF.order,works:DEF.order.map(function(id){return DEF.works[id];}),proc:DEF.proc,facts:DEF.facts,yt:DEF.yt,blog:DEF.blog,ig:DEF.ig,home:{rows:(function(){var r={};DEF.order.forEach(function(id){var x=WKO[id]||DEF.row[id];r[id]=typeof x==='string'?[x,'']:[x[0],x[1]];});return r;})(),hide:[],ba:HOMEDEF.ba,light:HOMEDEF.light},hs:HS.map(function(k){return ['m'+k,'m'+k+'n'];}),hsLib:HSLIB}));}
 var _IMG=IMG;
 IMG=function(k){return (CT.up&&CT.up[k])||_IMG(k);};
 function applyContent(c){

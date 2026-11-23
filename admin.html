@@ -100,6 +100,21 @@ input:focus,textarea:focus,select:focus{outline:2px solid #C9AE84;outline-offset
 .hsf.vac .hsup:hover{border-color:#1C1A18;color:#1C1A18;background:#FFF}
 .hsr.miss{border-color:#E7B8B2;background:#FDF6F5}
 .hsr .warn{display:block;font-size:11px;color:#B3261E;margin-top:4px}
+.pe1{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+.pe1 .it{position:relative;border:1px solid #E7E2DA;border-radius:8px;overflow:hidden;background:#FBFAF8}
+.pe1 figure{margin:0}.pe1 img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+.pe1 .n{position:absolute;left:6px;top:6px;z-index:1;background:rgba(0,0,0,.6);color:#FFF;font-size:11px;padding:2px 7px;border-radius:10px}
+.pe1 .mv{display:flex;justify-content:space-between;padding:2px 4px}
+.pe1 .mv button{min-width:36px;min-height:32px;border:0;background:none;cursor:pointer;border-radius:6px;font-size:13px}
+.pe1 .mv button:hover{background:#EEE9E1}.pe1 .mv button:disabled{opacity:.25;cursor:default}
+.grip{flex:none;display:inline-flex;align-items:center;justify-content:center;width:22px;height:34px;color:#A79E92;font-size:15px;letter-spacing:-3px;cursor:grab;touch-action:none;user-select:none;border-radius:4px}
+.grip:hover{color:#1C1A18;background:#EEE9E1}
+.hsr,.pe1 .it,.list .wk{cursor:grab}.hsr button,.hsr input,.pe1 button,.list .wk button{cursor:pointer}
+.drag{opacity:.55;box-shadow:0 6px 18px rgba(0,0,0,.18);outline:2px dashed #C9A97A;outline-offset:2px}
+body.dragging,body.dragging *{cursor:grabbing!important;user-select:none}
+.pe1 .grip{position:absolute;left:4px;bottom:2px;z-index:1;width:28px;height:30px}
+.hsr .note{display:block;font-size:11px;color:#8A6D3B;margin-top:4px}
+.pelb{margin-top:6px;width:100%;max-width:306px;height:34px;padding:0 10px;border:1px solid #D9D2C7;border-radius:6px;font:inherit;font-size:13px}
 .hsg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
 .hsa{border:1px solid #E7E2DA;border-radius:8px;background:#FBFAF8;padding:8px}
 .hsa .act{display:flex;gap:6px;margin-top:8px}.hsa .act .btn{flex:1}
@@ -277,7 +292,7 @@ var MENU=[
   ['home','한눈에 보기','현재 상태와 저장 기록'],
   ['cap','홈페이지 메뉴'],
   ['hero','메인 슬라이드','첫 화면 조명 사진(꺼짐·켜짐)의 장수와 순서'],
-  ['about','ABOUT','회사 소개 · 대표 디자이너 · 진행 절차'],
+  ['about','ABOUT','메인(ABOUT) 페이지 사진 · 회사 소개 · 진행 절차'],
   ['works','WORKS','포트폴리오 현장 목록과 사진'],
   ['contact','CONTACT','연락처 · 상담 안내 · 상담 접수함'],
   ['youtube','YOUTUBE','유튜브 채널 주소'],
@@ -452,6 +467,123 @@ function hsHas(L,p){return L.some(function(x){return x[0]===p[0]&&x[1]===p[1];})
 function hsSecCur(){var n=+(DRAFT.hsSec!=null?DRAFT.hsSec:5);return (n>=2&&n<=12)?n:5;}
 function libCur(){return DRAFT.hsLib||DEF.hsLib;}
 function libOwn(){if(!DRAFT.hsLib)DRAFT.hsLib=clone(DEF.hsLib);return DRAFT.hsLib;}
+/* ===== 끌어서 순서 바꾸기 =====
+   마우스: 칸 아무 곳이나 잡고 끌기 / 휴대폰: 왼쪽 ⋮⋮ 손잡이를 잡고 끌기 (화면 넘기기와 겹치지 않게) */
+var GRIP='<span class="grip" title="끌어서 순서 바꾸기" aria-hidden="true">⋮⋮</span>';
+function sortable(box,itemSel,onMove){
+  if(!box||box._sortable)return;box._sortable=1;
+  box.addEventListener('pointerdown',function(e){
+    if(e.button!==0)return;
+    var it=e.target.closest(itemSel);if(!it||it.parentNode!==box)return;
+    var grip=e.target.closest('.grip');
+    if(e.pointerType!=='mouse'&&!grip)return;
+    if(!grip&&e.target.closest('button,input,label,a,select,textarea'))return;
+    if(e.pointerType==='mouse')e.preventDefault();
+    function items(){return [].slice.call(box.children).filter(function(x){return x.matches(itemSel);});}
+    var from=items().indexOf(it),sx=e.clientX,sy=e.clientY,on=false,pid=e.pointerId,sc=scrollParent(box);
+    function mv(ev){if(ev.pointerId!==pid)return;
+      if(!on){if(Math.abs(ev.clientX-sx)+Math.abs(ev.clientY-sy)<6)return;on=true;it.classList.add('drag');document.body.classList.add('dragging');}
+      ev.preventDefault();
+      var r=sc.getBoundingClientRect?sc.getBoundingClientRect():{top:0,bottom:innerHeight},top=sc===document.scrollingElement?0:r.top,bot=sc===document.scrollingElement?innerHeight:r.bottom;
+      if(ev.clientY<top+60)sc.scrollTop-=14;else if(ev.clientY>bot-60)sc.scrollTop+=14;
+      it.style.pointerEvents='none';var el=document.elementFromPoint(ev.clientX,ev.clientY);it.style.pointerEvents='';
+      var ov=el&&el.closest(itemSel);
+      if(ov&&ov!==it&&ov.parentNode===box){var L=items();box.insertBefore(it,L.indexOf(ov)<L.indexOf(it)?ov:ov.nextSibling);}
+    }
+    function up(ev){if(ev.pointerId!==pid)return;
+      document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',up);
+      if(!on)return;it.classList.remove('drag');document.body.classList.remove('dragging');
+      var stop=function(ce){ce.stopPropagation();ce.preventDefault();};window.addEventListener('click',stop,true);setTimeout(function(){window.removeEventListener('click',stop,true);},0);
+      var to=items().indexOf(it);if(to!==from)onMove(from,to);}
+    document.addEventListener('pointermove',mv,{passive:false});document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up);
+  });
+}
+function scrollParent(el){for(var p=el.parentElement;p;p=p.parentElement){var o=getComputedStyle(p).overflowY;if((o==='auto'||o==='scroll')&&p.scrollHeight>p.clientHeight)return p;}return document.scrollingElement||document.documentElement;}
+function moveItem(L,from,to){var x=L.splice(from,1)[0];L.splice(to,0,x);}
+
+/* ===== 사진 편집 칸 (여러 화면에서 같이 씀) =====
+   kind 'one'  : 한 장씩 (격자)        예) 상세 사진, 공사 전 사진
+   kind 'pair' : 두 장 짝 (줄)          예) 조명 꺼짐/켜짐, 공사 전/후
+   kind 'mix'  : 한 장과 짝이 섞임 (줄)  예) Details
+   사진에 마우스를 올리면 오른쪽 위에 연필(바꾸기)·휴지통(삭제). 짝의 한 칸을 지우면 그 칸에 '+ 사진 올리기'. */
+var PE_PEN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>',
+    PE_BIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></svg>';
+var PE={};
+function peSlots(c,it){if(c.kind==='one')return [it];if(c.kind==='mix')return typeof it==='string'?[it]:[it.p[0],it.p[1]];return [it[0],it[1]];}
+function peSet(c,L,i,j,k){var it=L[i];
+  if(c.kind==='one'){L[i]=k;return;}
+  if(c.kind==='mix'){if(typeof it==='string'){L[i]=k;}else{var o=clone(it);o.p[j]=k;L[i]=o;}return;}
+  var a=it.slice();a[j]=k;L[i]=a;}
+function peFig(c,k,i,j,name,label){
+  var tag=(i+1)+'번 '+name;
+  if(!k)return '<figure class="hsf vac"><button type="button" class="hsup" data-a="ed" data-i="'+i+'" data-j="'+j+'">+ 사진 올리기</button>'+(label?'<figcaption>'+name+'</figcaption>':'')+'</figure>';
+  return '<figure class="hsf"><img src="'+esc(img(k))+'" alt="'+tag+' 사진" loading="lazy"><div class="hsact"><button type="button" data-a="ed" data-i="'+i+'" data-j="'+j+'" title="사진 바꾸기" aria-label="'+tag+' 사진 바꾸기">'+PE_PEN+'</button><button type="button" class="del" data-a="'+(c.kind==='one'||(c.kind==='mix'&&j<0)?'rm':'clr')+'" data-i="'+i+'" data-j="'+j+'" title="삭제" aria-label="'+tag+' 사진 삭제">'+PE_BIN+'</button></div>'+(label?'<figcaption>'+name+'</figcaption>':'')+'</figure>';}
+function peHTML(c){PE[c.id]=c;var L=c.get()||[],nm=c.names||['조명 꺼짐','조명 켜짐'],h='';
+  var head='<div class="row" style="justify-content:space-between;align-items:flex-start"><div style="flex:1 1 260px"><h3>'+c.title+' ('+L.length+')</h3>'+(c.hint?'<p class="hint" style="margin:0">'+c.hint+'</p>':'')+'</div><div class="row" style="gap:6px">'+
+    (c.kind!=='pair'||!c.both?'<label class="btn sm" for="pf_'+c.id+'">+ 사진 추가</label><input class="sr" type="file" id="pf_'+c.id+'" data-a="addf" accept="image/*" multiple>':'')+
+    (c.kind!=='one'?'<button class="btn sm" type="button" data-a="addp">+ '+(c.pairName||'짝')+' 추가</button>':'')+'</div></div>';
+  if(c.kind==='one'){
+    h=L.length?'<div class="pe1">'+L.map(function(k,i){return '<div class="it"><span class="n">'+(i+1)+'</span>'+GRIP+peFig(c,k,i,-1,'사진')+'<div class="mv"><button type="button" data-a="mv" data-d="-1" data-i="'+i+'" aria-label="'+(i+1)+'번 앞으로" '+(i?'':'disabled')+'>◀</button><button type="button" data-a="mv" data-d="1" data-i="'+i+'" aria-label="'+(i+1)+'번 뒤로" '+(i<L.length-1?'':'disabled')+'>▶</button></div></div>';}).join('')+'</div>':'<div class="empty">사진이 없어요. 「+ 사진 추가」로 올려 주세요.'+(c.emptyNote||'')+'</div>';
+  }else{
+    h=L.length?'<div class="hsl">'+L.map(function(it,i){var S=peSlots(c,it),two=S.length>1,half=two&&(!S[0]!==!S[1]),miss=c.both&&two&&(!S[0]||!S[1]);
+      return '<div class="hsr'+(miss?' miss':'')+'">'+GRIP+'<span class="no">'+(i+1)+'</span><div style="flex:1 1 auto;min-width:0"><div class="hsp">'+
+        (two?[0,1].map(function(j){return peFig(c,S[j],i,j,nm[j],true);}).join(''):peFig(c,S[0],i,-1,'사진',true))+'</div>'+
+        (c.label&&two?'<input class="pelb" type="text" data-a="lb" data-i="'+i+'" value="'+esc(it[2]||'')+'" placeholder="'+(c.labelPh||'이름 (예: 거실)')+'" aria-label="'+(i+1)+'번 이름">':'')+
+        (miss?'<span class="warn">공사 전·후 사진 두 장이 모두 있어야 홈페이지에 나옵니다.</span>':(half?'<span class="note">한 장만 있어요. 조명 효과 없이 이 사진만 나옵니다.</span>':''))+'</div>'+
+        '<div class="ctl"><button class="btn sm" type="button" data-a="mv" data-d="-1" data-i="'+i+'" aria-label="'+(i+1)+'번 위로" '+(i?'':'disabled')+'>▲</button><button class="btn sm" type="button" data-a="mv" data-d="1" data-i="'+i+'" aria-label="'+(i+1)+'번 아래로" '+(i<L.length-1?'':'disabled')+'>▼</button><button class="btn sm del" type="button" data-a="rm" data-i="'+i+'">삭제</button></div></div>';}).join('')+'</div>':'<div class="empty" style="margin-top:12px">사진이 없어요. 비워 두면 이 칸은 홈페이지에 나오지 않아요.</div>';
+  }
+  var dif=c.def&&JSON.stringify(c.get()||[])!==JSON.stringify(c.def()||[]);
+  return '<div class="card pe" data-pe="'+c.id+'">'+head+(L.length>1?'<p class="hint" style="margin:8px 0 0">사진 칸을 끌어서 순서를 바꿀 수 있어요. (휴대폰은 ⋮⋮ 를 잡고 끌기)</p>':'')+'<div style="margin-top:12px">'+h+'</div><input class="sr" type="file" data-a="pick" accept="image/*">'+
+    (dif?'<div class="row" style="margin-top:10px"><button class="btn link" type="button" data-a="def">이 칸을 처음 사진으로</button></div>':'')+'</div>';}
+function peWire(b,redraw){
+  b.querySelectorAll('.pe').forEach(function(box){var c=PE[box.dataset.pe];if(!c)return;var T=null,pick=box.querySelector('[data-a="pick"]');
+    function done(msg){changed();redraw();if(c.where)where(c.where[0],c.where[1]);if(msg)toast(msg);}
+    pick.addEventListener('change',function(e){var f=e.target.files[0];pick.value='';if(!f||!T)return;var t=T;T=null;
+      readPhoto(f,function(k){var L=c.own();if(!L[t[0]]&&L[t[0]]!=='')return;peSet(c,L,t[0],t[1],k);done((t[0]+1)+'번 사진을 바꿨어요. 저장하기를 눌러야 홈페이지에 반영됩니다.');});});
+    var af=box.querySelector('[data-a="addf"]');
+    if(af)af.addEventListener('change',function(e){var fs=[].slice.call(e.target.files),n=0,got=[];af.value='';if(!fs.length)return;toast('사진을 올리는 중이에요…');
+      fs.forEach(function(fl,ix){readPhoto(fl,function(k){got[ix]=k;if(++n===fs.length){var L=c.own();got.forEach(function(x){if(x)L.push(c.kind==='pair'?(c.label?[x,'','']:[x,'']):x);});if(c.onAdd)c.onAdd(got);done(n+'장을 추가했어요. 저장하기를 눌러야 홈페이지에 반영됩니다.');}});});});
+    sortable(box.querySelector('.pe1')||box.querySelector('.hsl'),c.kind==='one'?'.it':'.hsr',function(f,t){moveItem(c.own(),f,t);done('순서를 바꿨어요. 저장하기를 눌러야 홈페이지에 반영됩니다.');});
+    box.addEventListener('input',function(e){var x=e.target;if(x.dataset.a!=='lb')return;var L=c.own(),i=+x.dataset.i,a=L[i].slice();a[2]=x.value;L[i]=a;changed();});
+    box.addEventListener('focusin',function(e){if(e.target.dataset&&e.target.dataset.a==='lb'&&c.where)where(c.where[0],c.where[1]);});
+    box.addEventListener('click',function(e){var x=e.target.closest('button');if(!x||x.disabled||!box.contains(x))return;var a=x.dataset.a,i=+x.dataset.i,j=+x.dataset.j;
+      if(a==='ed'){T=[i,j];pick.click();return;}
+      if(a==='addp'){var L=c.own();L.push(c.kind==='mix'?{p:['','']}:(c.label?['','','']:['','']));done('빈 짝을 맨 아래에 만들었어요. 두 칸에 사진을 올려 주세요.');return;}
+      if(a==='def'){if(!confirm('이 칸의 사진을 처음 상태로 되돌릴까요?'))return;c.reset();done();return;}
+      var L2=c.own();
+      if(a==='mv'){var k2=i+(+x.dataset.d);if(k2<0||k2>=L2.length)return;var t=L2[i];L2[i]=L2[k2];L2[k2]=t;done();return;}
+      if(a==='clr'){if(!confirm((i+1)+'번 '+(c.names||['조명 꺼짐','조명 켜짐'])[j]+' 사진을 지울까요? 빈 칸에 새 사진을 올릴 수 있어요.'))return;peSet(c,L2,i,j,'');done();return;}
+      if(a==='rm'){if(!confirm((i+1)+'번 '+(c.kind==='one'?'사진':'항목')+'을 삭제할까요? 저장하기 전에는 되돌리기로 살릴 수 있어요.'))return;L2.splice(i,1);done('삭제했어요. 저장하기를 눌러야 홈페이지에 반영됩니다.');return;}
+    });
+  });
+}
+/* 메인(ABOUT) 페이지 사진 */
+function homeGet(k){return (DRAFT.home&&Array.isArray(DRAFT.home[k]))?DRAFT.home[k]:((DEF.home&&DEF.home[k])||[]);}
+function homeOwn(k){DRAFT.home=DRAFT.home||{};if(!Array.isArray(DRAFT.home[k]))DRAFT.home[k]=clone((DEF.home&&DEF.home[k])||[]);return DRAFT.home[k];}
+function homeRowGet(w){var r=DRAFT.home&&DRAFT.home.rows&&DRAFT.home.rows[w.id];if(r&&r[0])return r;var d=DEF.home&&DEF.home.rows&&DEF.home.rows[w.id];if(d&&(!defWork(w.id)||w.cover===defWork(w.id).cover))return d;return [w.cover||'',''];}
+function homeRowsHTML(){var W=works(),hide=(DRAFT.home&&DRAFT.home.hide)||[];
+  return '<div class="card pe" data-pe="homeRows"><h3>Works 칸 사진 ('+W.length+')</h3><p class="hint" style="margin:0">ABOUT 페이지 Works 칸에 현장마다 사진 한 장(또는 조명 꺼짐·켜짐 짝)이 나옵니다. 꺼짐·켜짐 중 한 장만 있어도 됩니다. 칸을 끌어서 순서를 바꾸면 <b>WORKS</b> 페이지 순서도 같이 바뀌어요.</p>'+
+  '<div class="hsl">'+W.map(function(w,i){var r=homeRowGet(w),off=hide.indexOf(w.id)>=0;
+    return '<div class="hsr'+(off?' miss':'')+'">'+GRIP+'<span class="no">'+(i+1)+'</span><div style="flex:1 1 auto;min-width:0"><div style="font-size:13px;font-weight:600;margin-bottom:4px">'+esc(w.name||'(이름 없음)')+(off?' <span style="color:#B3261E;font-weight:400">· 메인에서 숨김</span>':'')+'</div><div class="hsp">'+
+      [0,1].map(function(j){var k=r[j],nm=j?'조명 켜짐':'조명 꺼짐',tag=esc(w.name)+' '+nm;
+        if(!k)return '<figure class="hsf vac"><button type="button" class="hsup" data-a="ed" data-id="'+w.id+'" data-j="'+j+'">+ 사진 올리기</button><figcaption>'+nm+'</figcaption></figure>';
+        return '<figure class="hsf"><img src="'+esc(img(k))+'" alt="'+tag+'" loading="lazy"><div class="hsact"><button type="button" data-a="ed" data-id="'+w.id+'" data-j="'+j+'" title="사진 바꾸기" aria-label="'+tag+' 사진 바꾸기">'+PE_PEN+'</button><button type="button" class="del" data-a="clr" data-id="'+w.id+'" data-j="'+j+'" title="삭제" aria-label="'+tag+' 사진 삭제">'+PE_BIN+'</button></div><figcaption>'+nm+'</figcaption></figure>';}).join('')+'</div></div>'+
+      '<div class="ctl"><button class="btn sm'+(off?'':' del')+'" type="button" data-a="hide" data-id="'+w.id+'">'+(off?'메인에 보이기':'메인에서 숨기기')+'</button></div></div>';}).join('')+'</div>'+
+  '<input class="sr" type="file" data-a="pick" accept="image/*">'+(DRAFT.home&&((DRAFT.home.rows&&Object.keys(DRAFT.home.rows).length)||(DRAFT.home.hide&&DRAFT.home.hide.length))?'<div class="row" style="margin-top:10px"><button class="btn link" type="button" data-a="def">Works 칸 사진을 처음 상태로</button></div>':'')+'</div>';}
+function homeRowsWire(b,redraw){var box=b.querySelector('[data-pe="homeRows"]');if(!box)return;var T=null,pick=box.querySelector('[data-a="pick"]');
+  sortable(box.querySelector('.hsl'),'.hsr',function(f,t){moveItem(ownWorks(),f,t);changed();redraw();where('','#hwk');toast('순서를 바꿨어요. WORKS 페이지 순서도 같이 바뀌어요.');});
+  function own(){DRAFT.home=DRAFT.home||{};DRAFT.home.rows=DRAFT.home.rows||{};return DRAFT.home.rows;}
+  function done(m){changed();redraw();where('','#hwk');if(m)toast(m);}
+  pick.addEventListener('change',function(e){var f=e.target.files[0];pick.value='';if(!f||!T)return;var t=T;T=null;
+    readPhoto(f,function(k){var w=null;works().forEach(function(x){if(x.id===t[0])w=x;});if(!w)return;var r=homeRowGet(w).slice();r[t[1]]=k;own()[w.id]=r;done('사진을 바꿨어요. 저장하기를 눌러야 홈페이지에 반영됩니다.');});});
+  box.addEventListener('click',function(e){var x=e.target.closest('button');if(!x||!box.contains(x))return;var a=x.dataset.a,id=x.dataset.id,j=+x.dataset.j;
+    if(a==='ed'){T=[id,j];pick.click();return;}
+    if(a==='def'){if(!confirm('Works 칸 사진과 숨김 설정을 처음 상태로 되돌릴까요?'))return;delete DRAFT.home.rows;delete DRAFT.home.hide;done();return;}
+    var w=null;works().forEach(function(y){if(y.id===id)w=y;});if(!w)return;
+    if(a==='clr'){var r=homeRowGet(w).slice();r[j]='';if(!r[0]&&!r[1]){toast('사진이 한 장은 있어야 해요. 연필 버튼으로 바꿔 주세요.');return;}if(!confirm('이 사진을 지울까요? 남은 한 장만 조명 효과 없이 나와요.'))return;own()[id]=r;done();return;}
+    if(a==='hide'){DRAFT.home=DRAFT.home||{};var H=DRAFT.home.hide=DRAFT.home.hide||[],p=H.indexOf(id);if(p>=0)H.splice(p,1);else H.push(id);done(p>=0?'메인 Works 칸에 다시 보여요.':'메인 Works 칸에서 숨겼어요. WORKS 페이지에는 그대로 나와요.');}
+  });}
+
 V.hero=function(b){
   var NEW=[null,null];
   var PEN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>',
@@ -466,7 +598,7 @@ V.hero=function(b){
     b.innerHTML=chips([['첫 화면 슬라이드','','#hs']])+
     '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>지금 나오는 사진 ('+L.length+'장)</h3><p class="hint" style="margin:0">1번부터 순서대로 '+hsSecCur()+'초마다 넘어갑니다. 왼쪽이 조명 꺼진 사진, 오른쪽이 켜진 사진이에요. 홈페이지에서는 사진 왼쪽에 마우스를 두면 꺼지고, 오른쪽에 두면 켜집니다.</p></div>'+(DRAFT.hs?'<button class="btn link" type="button" id="hsDef">처음 내용으로</button>':'')+'</div>'+
     '<input class="sr" type="file" id="hsPick" accept="image/*">'+
-    '<div class="hsl">'+L.map(function(p,i){var miss=!p[0]||!p[1];return '<div class="hsr'+(miss?' miss':'')+'"><span class="no">'+(i+1)+'</span><div style="flex:1 1 auto;min-width:0">'+pairEdit(p,i)+(miss?'<span class="warn">사진 두 장(꺼짐·켜짐)이 모두 있어야 홈페이지에 나옵니다.</span>':'')+'</div>'+
+    '<div class="hsl">'+L.map(function(p,i){var half=!p[0]!==!p[1];return '<div class="hsr">'+GRIP+'<span class="no">'+(i+1)+'</span><div style="flex:1 1 auto;min-width:0">'+pairEdit(p,i)+(half?'<span class="note">한 장만 있어요. 조명 효과 없이 이 사진만 나옵니다.</span>':'')+'</div>'+
       '<div class="ctl"><button class="btn sm" type="button" data-mv="-1" data-i="'+i+'" aria-label="'+(i+1)+'번 위로" '+(i?'':'disabled')+'>▲</button><button class="btn sm" type="button" data-mv="1" data-i="'+i+'" aria-label="'+(i+1)+'번 아래로" '+(i<L.length-1?'':'disabled')+'>▼</button><button class="btn sm del" type="button" data-rm="'+i+'" '+(L.length>1?'':'disabled title="사진이 1장은 있어야 해요"')+'>빼기</button></div></div>';}).join('')+'</div>'+
     '<p class="hint" style="margin:12px 0 0">사진이 많을수록 한 바퀴 도는 시간이 길어집니다. 6~8장을 권해요. (최대 '+HS_MAX+'장)</p></div>'+
     '<div class="card"><h3>조명이 켜져 있을 때</h3><p class="hint">홈페이지에서 사진 오른쪽에 마우스를 두거나 전구 버튼을 눌러 조명을 켰을 때 어떻게 할지 정합니다.</p>'+
@@ -478,11 +610,12 @@ V.hero=function(b){
     '</div>'+
     '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>준비된 사진에서 넣기 ('+lib.length+'쌍)</h3><p class="hint" style="margin:0">「넣기」를 누르면 슬라이드 맨 뒤에 들어가요. 위에서 뺀 사진도 여기로 옵니다. 다시 쓰지 않을 사진은 「지우기」로 목록에서 없앨 수 있어요.</p></div>'+(gone.length?'<button class="btn link" type="button" id="libBack">지운 사진 되살리기 ('+gone.length+')</button>':'')+'</div>'+
     (lib.length?'<div class="hsg" style="margin-top:12px">'+lib.map(function(p){var k=LB.indexOf(p);return '<div class="hsa">'+pairImg(p)+'<div class="act"><button class="btn sm" type="button" data-lib="'+k+'">+ 넣기</button><button class="btn sm del" type="button" data-libdel="'+k+'">지우기</button></div></div>';}).join('')+'</div>':'<div class="empty" style="margin-top:12px">준비된 사진을 모두 쓰고 있어요.</div>')+'</div>'+
-    '<div class="card"><h3>새 사진 쌍 올리기</h3><p class="hint">같은 자리에서 같은 구도로 찍은 사진 두 장(조명 끈 사진, 켠 사진)을 올려 주세요. 구도가 다르면 마우스를 움직일 때 사진이 어긋나 보여요. 가로 사진(3:2)이 가장 잘 맞습니다.</p>'+
+    '<div class="card"><h3>새 사진 올리기</h3><p class="hint">같은 자리에서 같은 구도로 찍은 사진 두 장(조명 끈 사진, 켠 사진)을 올려 주세요. 한 장만 올려도 됩니다(조명 효과 없이 그 사진만 나와요). 구도가 다르면 마우스를 움직일 때 사진이 어긋나 보여요. 가로 사진(3:2)이 가장 잘 맞습니다.</p>'+
     '<div class="row" style="gap:16px;align-items:flex-start">'+[0,1].map(function(j){return '<div class="hsn"><div class="box">'+(NEW[j]?'<img src="'+esc(hsThumb(NEW[j]))+'" alt="">':'<span>'+(j?'조명 켜짐':'조명 꺼짐')+'</span>')+'</div><label class="btn sm" for="hsF'+j+'">'+(NEW[j]?'다시 고르기':(j?'켜진 사진 고르기':'꺼진 사진 고르기'))+'</label><input class="sr" type="file" id="hsF'+j+'" accept="image/*"></div>';}).join('')+
-    '</div><div class="row" style="margin-top:12px"><button class="btn" type="button" id="hsAdd" '+(NEW[0]&&NEW[1]?'':'disabled')+'>이 사진 쌍 넣기</button></div></div>';
+    '</div><div class="row" style="margin-top:12px"><button class="btn" type="button" id="hsAdd" '+(NEW[0]||NEW[1]?'':'disabled')+'>이 사진 넣기</button></div></div>';
     wireChips(b);
     var box=b.querySelector('.hsl');
+    sortable(box,'.hsr',function(f,t){moveItem(hsOwn(),f,t);changed();draw2();where('','#hs');toast('순서를 바꿨어요. 저장하기를 눌러야 반영됩니다.');});
     var pick=b.querySelector('#hsPick'),PT=null;
     pick.addEventListener('change',function(e){var f=e.target.files[0];pick.value='';if(!f||!PT)return;var t=PT;PT=null;
       readPhoto(f,function(k){var L=hsOwn(),p=L[t[0]];if(!p)return;
@@ -491,12 +624,12 @@ V.hero=function(b){
         L[t[0]]=p.slice();L[t[0]][t[1]]=k;changed();draw2();where('','#hs');toast((t[0]+1)+'번 '+(t[1]?'조명 켜진':'조명 꺼진')+' 사진을 바꿨어요. 저장하기를 눌러야 반영됩니다.');});});
     box.addEventListener('click',function(e){var x=e.target.closest('button');if(!x||x.disabled)return;
       var pe=x.dataset.ed||x.dataset.up;if(pe){PT=pe.split(',').map(Number);pick.click();return;}
-      if(x.dataset.del){var t=x.dataset.del.split(',').map(Number),L0=hsOwn();if(!confirm((t[0]+1)+'번 '+(t[1]?'조명 켜진':'조명 꺼진')+' 사진을 지울까요? 빈 칸에 새 사진을 올릴 수 있어요.'))return;
+      if(x.dataset.del){var t=x.dataset.del.split(',').map(Number),L0=hsOwn();if(!L0[t[0]][1-t[1]]){toast('사진이 한 장은 있어야 해요. 연필 버튼으로 바꾸거나 「빼기」를 눌러 주세요.');return;}if(!confirm((t[0]+1)+'번 '+(t[1]?'조명 켜진':'조명 꺼진')+' 사진을 지울까요? 빈 칸에 새 사진을 올릴 수 있어요.'))return;
         L0[t[0]]=L0[t[0]].slice();L0[t[0]][t[1]]=null;changed();draw2();where('','#hs');return;}
       var L=hsOwn(),i=+x.dataset.i;
       if(x.dataset.mv){var j=i+(+x.dataset.mv);var t=L[i];L[i]=L[j];L[j]=t;}
       else if(x.dataset.rm!=null){if(L.length<2)return;if(!confirm((+x.dataset.rm+1)+'번 사진을 슬라이드에서 뺄까요? 아래 "준비된 사진"으로 옮겨지고, 언제든 다시 넣을 수 있어요.'))return;
-        var p=L.splice(+x.dataset.rm,1)[0];if(p&&p[0]&&p[1]&&!hsHas(libCur(),p))libOwn().push(p);}
+        var p=L.splice(+x.dataset.rm,1)[0];if(p&&(p[0]||p[1])&&!hsHas(libCur(),p))libOwn().push(p);}
       changed();draw2();where('','#hs');});
     b.querySelectorAll('[data-lib]').forEach(function(x){x.addEventListener('click',function(){var L=hsOwn();if(L.length>=HS_MAX){toast('최대 '+HS_MAX+'장까지 넣을 수 있어요.');return;}L.push(clone(libCur()[+x.dataset.lib]));changed();draw2();toast((L.length)+'번째로 넣었어요.');where('','#hs');});});
     b.querySelectorAll('[data-libdel]').forEach(function(x){x.addEventListener('click',function(){
@@ -513,23 +646,28 @@ V.hero=function(b){
     var rb=b.querySelector('#libBack');if(rb)rb.addEventListener('click',function(){var LB=libOwn(),L=hsCur();DEF.hsLib.forEach(function(p){if(!hsHas(LB,p)&&!hsHas(L,p))LB.push(clone(p));});changed();draw2();toast('지운 사진을 되살렸어요.');});
     var d=b.querySelector('#hsDef');if(d)d.addEventListener('click',function(){if(!confirm('메인 슬라이드를 처음 내용(1~6번)으로 되돌릴까요?'))return;delete DRAFT.hs;changed();draw2();where('','#hs');});
     [0,1].forEach(function(j){b.querySelector('#hsF'+j).addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;readPhoto(f,function(k){NEW[j]=k;draw2();});});});
-    b.querySelector('#hsAdd').addEventListener('click',function(){if(!NEW[0]||!NEW[1])return;var L=hsOwn();if(L.length>=HS_MAX){toast('최대 '+HS_MAX+'장까지 넣을 수 있어요.');return;}
+    b.querySelector('#hsAdd').addEventListener('click',function(){if(!NEW[0]&&!NEW[1])return;var L=hsOwn();if(L.length>=HS_MAX){toast('최대 '+HS_MAX+'장까지 넣을 수 있어요.');return;}
       var dm=Object.assign({},SAVED.dim||{},DRAFT.dim||{}),r0=dm[NEW[0]],r1=dm[NEW[1]];
       if(r0&&r1&&Math.abs(r0-r1)/r0>.03&&!confirm('두 사진의 가로세로 비율이 달라요. 같은 구도로 찍은 사진이 아니면 어긋나 보일 수 있어요. 그래도 넣을까요?'))return;
-      L.push([NEW[0],NEW[1]]);NEW=[null,null];changed();draw2();toast(L.length+'번째로 넣었어요. 저장하기를 누르면 홈페이지에 나타납니다.');where('','#hs');});
+      L.push([NEW[0]||'',NEW[1]||'']);NEW=[null,null];changed();draw2();toast(L.length+'번째로 넣었어요. 저장하기를 누르면 홈페이지에 나타납니다.');where('','#hs');});
   }
   draw2();where('','#hs');
 };
 
 V.about=function(b){
   function draw2(){
-    b.innerHTML=chips([['About 구역','','#designer'],['Process 구역','','#process']])+
+    var cBa={id:'homeBa',kind:'pair',both:true,title:'Before / After',names:['공사 전','공사 후'],label:true,pairName:'전·후 짝',labelPh:'이름 (예: 거실)',hint:'Works 칸 아래의 공사 전·후 비교 사진입니다. 같은 자리에서 찍은 두 장을 올려 주세요. 여러 짝이면 위아래로 나옵니다.',
+      get:function(){return homeGet('ba');},own:function(){return homeOwn('ba');},def:function(){return DEF.home.ba;},reset:function(){if(DRAFT.home)delete DRAFT.home.ba;},where:['','#hba']};
+    var cLt={id:'homeLt',kind:'pair',title:'조명 사진 (Before / After 아래)',names:['조명 꺼짐','조명 켜짐'],label:true,pairName:'조명 짝',labelPh:'설명 (예: 거실)',hint:'두 장씩 나란히 나오는 조명 사진입니다. 같은 자리에서 조명을 끄고, 켜고 찍은 두 장을 올려 주세요. 한 장만 있어도 됩니다(조명 효과 없이 그 사진만 나와요).',
+      get:function(){return homeGet('light');},own:function(){return homeOwn('light');},def:function(){return DEF.home.light;},reset:function(){if(DRAFT.home)delete DRAFT.home.light;},where:['','#hlt']};
+    b.innerHTML=chips([['Works 칸','','#hwk'],['Before / After','','#hba'],['조명 사진','','#hlt'],['About 구역','','#designer'],['Process 구역','','#process']])+
+    homeRowsHTML()+peHTML(cBa)+peHTML(cLt)+
     '<div class="card"><h3>회사 소개</h3><p class="hint">엔터를 누르면 홈페이지에서도 줄이 바뀝니다. 칸을 비우면 처음 문구로 돌아가요.</p>'+txField('aboutLead')+txField('aboutBody')+txField('designer')+'</div>'+
     '<div class="card"><h3>회사 정보 칸</h3><p class="hint">About 아래 네 칸(경력, 시공 지역, A/S, 고객 평가)입니다.</p>'+pairList('facts',['항목','내용'])+'</div>'+
     '<div class="card"><h3>진행 절차 (Process)</h3><p class="hint">순서대로 01, 02… 번호가 붙습니다.</p>'+pairList('proc',['단계 이름','설명'],true)+'</div>';
-    wireTx(b);wireChips(b);wirePairs(b,'facts','','#designer',draw2);wirePairs(b,'proc','','#process',draw2);
+    wireTx(b);wireChips(b);wirePairs(b,'facts','','#designer',draw2);wirePairs(b,'proc','','#process',draw2);homeRowsWire(b,draw2);peWire(b,draw2);
   }
-  draw2();where('','#designer');
+  draw2();where('','#hwk');
 };
 
 V.works=function(b){
@@ -538,10 +676,11 @@ V.works=function(b){
   b.innerHTML=chips([['WORKS 페이지','works',''],['메인의 포트폴리오','','']])+
   '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>포트폴리오 현장 ('+W.length+')</h3><p class="hint" style="margin:0">위에 있을수록 먼저 보입니다. ▲▼로 순서를 바꿔요.</p></div><button class="btn pri" type="button" id="addW">+ 새 현장 올리기</button></div>'+
   '<div class="list" style="margin-top:14px">'+W.map(function(w,i){
-    return '<div class="wk"><img src="'+(w.cover?esc(img(w.cover)):'')+'" alt=""><div><div class="nm">'+esc(w.name||'(이름 없음)')+'</div><div class="meta">'+esc([w.py,w.loc].filter(Boolean).join(' · '))+' · 사진 '+(w.gallery||[]).length+'장'+(w.yt?' · 영상 있음':'')+'</div></div>'+
+    return '<div class="wk">'+GRIP+'<img src="'+(w.cover?esc(img(w.cover)):'')+'" alt=""><div><div class="nm">'+esc(w.name||'(이름 없음)')+'</div><div class="meta">'+esc([w.py,w.loc].filter(Boolean).join(' · '))+' · 사진 '+(w.gallery||[]).length+'장'+(w.yt?' · 영상 있음':'')+'</div></div>'+
     '<div class="ctl"><button class="btn sm" type="button" data-mv="-1" data-i="'+i+'" aria-label="위로" '+(i?'':'disabled')+'>▲</button><button class="btn sm" type="button" data-mv="1" data-i="'+i+'" aria-label="아래로" '+(i<W.length-1?'':'disabled')+'>▼</button><button class="btn sm" type="button" data-ed="'+i+'">수정</button><button class="btn sm del" type="button" data-rm="'+i+'">삭제</button></div></div>';
   }).join('')+'</div>'+(DRAFT.works?'<div class="row" style="margin-top:10px"><button class="btn link" type="button" id="defW">현장 목록을 처음 상태로</button></div>':'')+'</div>';
   wireChips(b);
+  sortable(b.querySelector('.list'),'.wk',function(f,t){moveItem(ownWorks(),f,t);changed();draw();where('works','');toast('순서를 바꿨어요. 저장하기를 눌러야 홈페이지에 반영됩니다.');});
   b.querySelector('#addW').addEventListener('click',function(){var L=ownWorks(),id='p'+Date.now().toString(36);L.unshift({id:id,name:'',py:'',band:'30',loc:'',type:'아파트 · 전체 리모델링',line:'',yt:'',hero:'',cover:'',gallery:[]});EDIT=id;changed();draw();});
   b.querySelectorAll('[data-mv]').forEach(function(x){x.addEventListener('click',function(){var L=ownWorks(),i=+x.dataset.i,j=i+(+x.dataset.mv),t=L[i];L[i]=L[j];L[j]=t;changed();draw();where('works','');});});
   b.querySelectorAll('[data-ed]').forEach(function(x){x.addEventListener('click',function(){EDIT=works()[+x.dataset.ed].id;draw();});});
@@ -554,8 +693,19 @@ function workEdit(b){
   var L=ownWorks(),w=null;for(var i=0;i<L.length;i++)if(L[i].id===EDIT)w=L[i];
   if(!w){EDIT=null;return V.works(b);}
   var dw=defWork(w.id);
+  function arr(k){return function(){return Array.isArray(w[k])?w[k]:((dw&&dw[k])||[]);};}
+  function own(k){return function(){if(!Array.isArray(w[k]))w[k]=clone((dw&&dw[k])||[]);return w[k];};}
+  function dfl(k){return dw?function(){return dw[k]||[];}:null;}
+  function rst(k){return function(){w[k]=clone((dw&&dw[k])||[]);};}
+  var PEs=[
+    {id:'w_gal',kind:'one',title:'사진',hint:'상세 페이지에 콜라주로 나옵니다. 1번이 맨 앞이에요.',get:arr('gallery'),own:own('gallery'),def:dfl('gallery'),reset:rst('gallery'),where:[w.id,''],onAdd:function(g){if(!w.cover&&g[0]){w.cover=g[0];w.hero=g[0];}}},
+    {id:'w_small',kind:'mix',title:'Details (작은 사진)',pairName:'조명 짝',hint:'세로로 긴 작은 사진 칸입니다. 한 장 사진과 조명 꺼짐·켜짐 짝을 섞어 넣을 수 있어요.',get:arr('small'),own:own('small'),def:dfl('small'),reset:rst('small'),where:[w.id,'#dsmall']},
+    {id:'w_light',kind:'pair',title:'Light (조명 사진)',names:['조명 꺼짐','조명 켜짐'],pairName:'조명 짝',hint:'두 장씩 나란히 나옵니다. 마우스를 올리거나 휴대폰에서 꾹 누르면 켜진 사진으로 바뀌어요. 꺼짐·켜짐 중 한 장만 있어도 올릴 수 있어요(조명 효과 없이 그 사진만 나와요).',get:arr('light'),own:own('light'),def:dfl('light'),reset:rst('light'),where:[w.id,'#dlight']},
+    {id:'w_ba',kind:'pair',both:true,title:'Before / After (공사 전후 비교)',names:['공사 전','공사 후'],label:true,pairName:'전·후 짝',labelPh:'이름 (예: 거실)',hint:'가운데 막대를 밀어 비교하는 사진입니다. 이름은 사진 위에 작게 나와요.',get:arr('ba'),own:own('ba'),def:dfl('ba'),reset:rst('ba'),where:[w.id,'#dba']},
+    {id:'w_before',kind:'one',title:'Before (공사 전 사진)',hint:'상세 페이지 맨 아래 작은 사진으로 나옵니다.',get:arr('before'),own:own('before'),def:dfl('before'),reset:rst('before'),where:[w.id,'#dbefore']}
+  ];
   function f(k,label,ph,type){return '<div class="f"><label for="w_'+k+'">'+label+'</label><input type="'+(type||'text')+'" id="w_'+k+'" data-w="'+k+'" placeholder="'+(ph||'')+'" value="'+esc(k==='yt'&&w.yt?'https://www.youtube.com/watch?v='+w.yt:w[k])+'"></div>';}
-  b.innerHTML='<div class="row" style="margin-bottom:14px"><button class="btn sm" type="button" id="back">← 현장 목록</button></div>'+chips([['이 현장 상세 페이지',w.id,'']])+
+  b.innerHTML='<div class="row" style="margin-bottom:14px"><button class="btn sm" type="button" id="back">← 현장 목록</button></div>'+chips([['이 현장 상세 페이지',w.id,''],['Details',w.id,'#dsmall'],['Light',w.id,'#dlight'],['Before / After',w.id,'#dba'],['Before',w.id,'#dbefore']])+
   '<div class="card"><h3>현장 정보</h3><p class="hint">WORKS 목록, 썸네일 위 글자, 상세 페이지 맨 위에 나옵니다.</p>'+
   '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 14px">'+f('name','현장명 (필수)','예: 위브더제니스')+f('py','평형 표기','예: 69PY')+
   '<div class="f"><label for="w_band">평형대 (WORKS 거르기)</label><select id="w_band" data-w="band">'+BANDS.map(function(x){return '<option value="'+x[0]+'"'+(w.band===x[0]?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select></div>'+
@@ -564,10 +714,8 @@ function workEdit(b){
   f('yt','유튜브 영상 주소','유튜브 영상 주소를 붙여 넣으세요 (없으면 비워 두기)','url')+'<p class="hint" id="ytmsg" style="margin:6px 0 0">'+(w.yt?'상세 페이지 위쪽에 "유튜브 영상 보기" 버튼이 나옵니다.':'비워 두면 영상 버튼이 나오지 않아요.')+'</p></div>'+
   '<div class="card"><h3>대표 사진 (필수)</h3><p class="hint">WORKS 목록 썸네일과 상세 페이지 맨 위 사진입니다. 가로 사진이 잘 어울려요.</p><div class="cover">'+(w.cover?'<img src="'+esc(img(w.cover))+'" alt="대표 사진">':'<div class="empty" style="width:220px">아직 대표 사진이 없어요</div>')+
   '<div class="row"><label class="btn" for="coverF">사진 바꾸기</label><input class="sr" type="file" id="coverF" accept="image/*">'+(dw&&w.cover!==dw.cover?'<button class="btn link" type="button" id="coverDef">처음 그림으로</button>':'')+'</div></div></div>'+
-  '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>사진 ('+(w.gallery||[]).length+'장)</h3><p class="hint" style="margin:0">상세 페이지에 콜라주로 나옵니다. 1번이 맨 앞이에요.</p></div><label class="btn" for="galF">+ 사진 추가</label><input class="sr" type="file" id="galF" accept="image/*" multiple></div>'+
-  '<div class="gal" style="margin-top:14px">'+((w.gallery||[]).length?w.gallery.map(function(k,i){return '<div class="g"><span class="n">'+(i+1)+'</span><img src="'+esc(img(k))+'" alt="사진 '+(i+1)+'" loading="lazy"><div class="ctl"><button type="button" data-gm="-1" data-i="'+i+'" aria-label="앞으로">◀</button><button type="button" data-gr="'+i+'" aria-label="사진 '+(i+1)+' 삭제" style="color:#A3261B">삭제</button><button type="button" data-gm="1" data-i="'+i+'" aria-label="뒤로">▶</button></div></div>';}).join(''):'<div class="empty" style="grid-column:1/-1">사진을 추가해 주세요.</div>')+'</div>'+
-  (dw&&JSON.stringify(w.gallery)!==JSON.stringify(dw.gallery)?'<div class="row" style="margin-top:10px"><button class="btn link" type="button" id="galDef">사진을 처음 상태로</button></div>':'')+'</div>'+
-  '<p class="hint">조명 켜짐/꺼짐 사진, 공사 전후 비교 사진은 제작사에서 짝을 맞춰 넣어 드립니다.</p>';
+  PEs.map(peHTML).join('')+
+  '<p class="hint">조명 짝·공사 전후 짝은 같은 자리에서 같은 구도로 찍은 두 장을 올려야 자연스럽게 겹쳐 보여요. 가로 사진(3:2)이 가장 잘 맞습니다.</p>';
   wireChips(b);
   b.querySelector('#back').addEventListener('click',function(){EDIT=null;draw();});
   b.querySelectorAll('[data-w]').forEach(function(el){
@@ -581,10 +729,7 @@ function workEdit(b){
   });
   b.querySelector('#coverF').addEventListener('change',function(e){var fl=e.target.files[0];if(!fl)return;readPhoto(fl,function(k){w.cover=k;w.hero=k;changed();draw();where(w.id,'');toast('대표 사진을 바꿨어요. 저장하기를 눌러야 홈페이지에 나타납니다.');});});
   var cd=b.querySelector('#coverDef');if(cd)cd.addEventListener('click',function(){w.cover=dw.cover;w.hero=dw.hero;changed();draw();});
-  b.querySelector('#galF').addEventListener('change',function(e){var fs=[].slice.call(e.target.files),n=0;if(!fs.length)return;w.gallery=w.gallery||[];fs.forEach(function(fl){readPhoto(fl,function(k){w.gallery.push(k);if(!w.cover){w.cover=k;w.hero=k;}if(++n===fs.length){changed();draw();where(w.id,'');toast(n+'장을 추가했어요.');}});});});
-  b.querySelectorAll('[data-gm]').forEach(function(x){x.addEventListener('click',function(){var g=w.gallery,i=+x.dataset.i,j=i+(+x.dataset.gm);if(j<0||j>=g.length)return;var t=g[i];g[i]=g[j];g[j]=t;changed();draw();});});
-  b.querySelectorAll('[data-gr]').forEach(function(x){x.addEventListener('click',function(){if(!confirm('이 사진을 삭제할까요?'))return;w.gallery.splice(+x.dataset.gr,1);changed();draw();});});
-  var gd=b.querySelector('#galDef');if(gd)gd.addEventListener('click',function(){w.gallery=dw.gallery.slice();changed();draw();});
+  peWire(b,function(){draw();});
   where(w.id,'');
 }
 
