@@ -588,6 +588,15 @@ V.youtube=function(b){linkView(b,'yt','유튜브','메뉴의 YOUTUBE와 맨 아�
 V.blog=function(b){linkView(b,'blog','블로그','메뉴의 BLOG와 맨 아래 링크가 이 주소로 연결됩니다.','https://blog.naver.com/...');};
 
 /* 첫 화면 큰 제목 위치: 9칸 중 하나를 누르거나, 막대로 가로·세로를 세밀하게. 바꾸면 미리보기에 바로 보임 */
+/* 첫 화면 큰 제목의 아랫줄: 작게(오른쪽 맞춤) 또는 첫 줄과 같은 크기 */
+function heroSubBlock(){var same=DRAFT.heroSub==='same';
+  return '<div class="f hsubf"><label><span>아랫줄 글자</span></label><div class="row" style="gap:6px">'+
+   '<button class="btn sm" type="button" data-hsub="small"'+(same?'':' style="background:#1C1A18;color:#fff;border-color:#1C1A18"')+'>작게 (첫 줄 오른쪽 끝에 맞춤)</button>'+
+   '<button class="btn sm" type="button" data-hsub="same"'+(same?' style="background:#1C1A18;color:#fff;border-color:#1C1A18"':'')+'>첫 줄과 같은 크기</button></div>'+
+   '<p class="hint" style="margin:6px 0 0">위 칸에서 엔터로 줄을 나누면 둘째 줄부터가 아랫줄입니다.</p></div>';}
+function wireHeroSub(b){b.querySelectorAll('[data-hsub]').forEach(function(x){x.addEventListener('click',function(){
+  if(x.dataset.hsub==='same')DRAFT.heroSub='same';else delete DRAFT.heroSub;changed();
+  var f=b.querySelector('.hsubf'),d=document.createElement('div');d.innerHTML=heroSubBlock();f.replaceWith(d.firstChild);wireHeroSub(b);where('','');});});}
 function heroPosCur(){var p=DRAFT.heroPos;return (p&&isFinite(+p.x)&&isFinite(+p.y))?{x:+p.x,y:+p.y}:null;}
 function heroPosBlock(){
   var p=heroPosCur(),cx=p?p.x:0,cy=p?p.y:100;
@@ -616,8 +625,8 @@ V.texts=function(b){
   var groups=[['b','홈페이지']];
   b.innerHTML='<div class="card"><h3>회사 정보</h3><p class="hint">맨 아래 회사 정보 줄에 나옵니다.</p>'+txField('ceo')+txField('biz')+'</div>'+
   groups.map(function(g){var ks=Object.keys(DEF.tx).filter(function(k){return DEF.tx[k].g==='hero'&&DEF.tx[k].v===g[0];});
-    return '<div class="card"><h3>'+g[1]+' 문구</h3><p class="hint">칸을 누르면 오른쪽 미리보기에서 그 문구가 나오는 곳을 보여 줍니다.</p>'+ks.map(function(k){return txField(k)+(k==='heroB'?heroPosBlock():'');}).join('')+'</div>';}).join('');
-  wireTx(b);wireHeroPos(b);
+    return '<div class="card"><h3>'+g[1]+' 문구</h3><p class="hint">칸을 누르면 오른쪽 미리보기에서 그 문구가 나오는 곳을 보여 줍니다.</p>'+ks.map(function(k){return txField(k)+(k==='heroB'?heroSubBlock()+heroPosBlock():'');}).join('')+'</div>';}).join('');
+  wireTx(b);wireHeroPos(b);wireHeroSub(b);
   b.querySelectorAll('[data-tx="ceo"],[data-tx="biz"]').forEach(function(el){el.addEventListener('focus',function(){where('','footer');});});
   where('','');
 };

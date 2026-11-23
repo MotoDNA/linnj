@@ -286,6 +286,9 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
 .B .hero .lt .bulb{bottom:76px;right:20px}
 .B .hero .bshade{position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,0) 22%,rgba(0,0,0,0) 50%,rgba(0,0,0,.5) 92%)}
 .B .hero h1{margin:0;font-size:clamp(34px,5vw,64px);font-weight:300;line-height:1.3}
+.B .hero h1.hsub .ht{display:inline-block;text-align:left}
+.B .hero h1.hsub .l1{display:block;white-space:nowrap}
+.B .hero h1.hsub .l2{display:block;margin-top:.55em;text-align:right;font-family:'Noto Sans KR',sans-serif;font-weight:400;font-size:clamp(13px,.3em,20px);letter-spacing:.02em;line-height:1.6;opacity:.95}
 .B .hero .txt.pos{top:calc(var(--hh,96px) + 24px);bottom:72px}
 .B .hero .txt.pos.pr{bottom:128px}
 .B .hero .txt.pos .tin{position:absolute;top:0;bottom:0;left:clamp(20px,4vw,48px);right:clamp(20px,4vw,48px)}
@@ -379,6 +382,8 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
  .B .hero .txt.pos .tin{position:static}
  .B .hero .txt.pos h1{position:static;transform:none;width:auto;max-width:none}
  .B .hero h1{font-size:28px}
+ .B .hero h1.hsub .l1{white-space:normal}
+ .B .hero h1.hsub .l2{font-size:13px}
  .bh img{transform:none}.bh img.on{animation:none}.bh::after{display:none}
  .D .vhero{height:auto;min-height:0;padding-top:calc(var(--hh,120px) + 66.667vw);background:#FFFFFF}
  .D .vhero .bh{top:var(--hh,120px);bottom:auto;height:66.667vw}
@@ -633,10 +638,14 @@ function hsSame(k){var u=CT.up&&CT.up[k],m=u&&/id=([\w-]+)/.exec(u);return (m&&H
 function hsFade(){return Math.min(3,hsSec()-0.5);}
 function hsSec(){var n=+CT.hsSec;return (n>=2&&n<=12)?n:5;}
 /* 첫 화면 큰 제목 위치: 관리자에서 정함. CT.heroPos={x:0~100(왼쪽→오른쪽), y:0~100(위→아래)}. 없으면 원래 자리(왼쪽 아래) */
+/* 첫 화면 큰 제목: 첫 줄은 크게, 아랫줄은 작은 고딕 글씨로 첫 줄 오른쪽 끝에 맞춤 (관리자에서 '같은 크기'로 바꿀 수 있음) */
+function heroH1(){var raw=(CT.tx&&CT.tx.heroB!=null&&CT.tx.heroB!=='')?CT.tx.heroB:TX.heroB.d,L=String(raw).split('\n');
+  if(CT.heroSub==='same'||L.length<2)return '<h1>'+tx('heroB')+'</h1>';
+  return '<h1 class="hsub"><span class="ht"><span class="l1">'+esc(L[0])+'</span><span class="l2">'+L.slice(1).map(esc).join('<br>')+'</span></span></h1>';}
 function heroTxt(){var p=CT.heroPos,ok=p&&isFinite(+p.x)&&isFinite(+p.y);
-  if(!ok)return '<div class="txt wrap"><div class="tin"><h1>'+tx('heroB')+'</h1></div></div>';
+  if(!ok)return '<div class="txt wrap"><div class="tin">'+heroH1()+'</div></div>';
   var x=Math.max(0,Math.min(100,+p.x)),y=Math.max(0,Math.min(100,+p.y)),al=x<34?'left':(x>66?'right':'center');
-  return '<div class="txt wrap pos'+(x>60?' pr':'')+'" style="--x:'+x+'%;--y:'+y+'%;--al:'+al+'"><div class="tin"><h1>'+tx('heroB')+'</h1></div></div>';}
+  return '<div class="txt wrap pos'+(x>60?' pr':'')+'" style="--x:'+x+'%;--y:'+y+'%;--al:'+al+'"><div class="tin">'+heroH1()+'</div></div>';}
 function hsList(){var L=(CT.hs&&CT.hs.length)?CT.hs:HS.map(function(k){return ['m'+k,'m'+k+'n'];});return L.filter(function(p){return p&&p[0]&&p[1];}).map(function(p){return [hsSame(p[0]),hsSame(p[1])];});}
 function hsImg(t,x,eager){
   var u=CT.up&&CT.up[x];
