@@ -98,8 +98,9 @@ button{font:inherit;color:inherit}
 .back:hover{background:#1C1A18;color:#FFFFFF}
 /* 로고의 Linn & J 글자 윗선을 메뉴(ABOUT·WORKS…) 글자 윗선에 맞춤 (PC) */
 @media (min-width:601px){.hdr .logo .lj-full{transform:translateY(6.5px)}.D .hdr .dlogo .lj-full{transform:translateY(4.5px)}}
-.adm{position:fixed;right:16px;bottom:16px;z-index:50;display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:22px;background:rgba(28,26,24,.88);color:#F2F0EB;text-decoration:none;font-family:'Noto Serif KR',serif;font-size:14px;letter-spacing:.14em}
-.adm:hover{background:#1C1A18;color:#FFFFFF}
+.fab{position:fixed;right:16px;bottom:16px;z-index:50;display:inline-flex;align-items:center;min-height:44px;padding:0 20px;border-radius:22px;background:rgba(28,26,24,.88);color:#F2F0EB;text-decoration:none;font-family:'Noto Serif KR',serif;font-size:14px;letter-spacing:.1em;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.fab:hover{background:#1C1A18;color:#FFFFFF}
+.fab:focus-visible{outline:2px solid #C9AE84;outline-offset:3px}
 
 /* ---------- light on/off ---------- */
 .lt{position:relative;overflow:hidden;background:#111;cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:pan-y}
@@ -928,7 +929,8 @@ function render(){
     else if(M[pg]&&pg!=='home'&&pg!=='project')html=M[pg]();
     else if(P[pg])html=M.project(P[pg]);
     else html=M.home();
-    html+=(PREVIEW?'':'<a class="adm" href="admin.html" aria-label="관리자 페이지">admin</a>');
+    /* 오른쪽 아래 떠 있는 상담 신청 버튼 (상담 페이지에서는 숨김). 관리자 페이지는 linnj.kr/admin 으로 직접 들어감 */
+    if(pg!=='contact')html+='<a class="fab" href="#'+v+'-contact">상담 신청</a>';
     document.title='Linn&J 인테리어';
   }
   app.innerHTML=html;
