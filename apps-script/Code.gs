@@ -14,6 +14,7 @@
  *
  * 알림톡 설정값은 [프로젝트 설정 → 스크립트 속성]에 넣습니다. (코드에 적지 않음)
  *   SOLAPI_KEY, SOLAPI_SECRET, ALERT_TO(알림 받을 번호), PFID(KA01PF...), TEMPLATE_ID(KA01TP...), SMS_FROM(선택, 등록된 발신번호)
+ *   REQ_PW(선택): ONEMILL 수정요청 접수 비밀번호. 넣어 두면 관리자 페이지 [수정 요청]에서 비밀번호 없이 바로 들어갑니다.
  */
 
 var DATA_SHEET = '내용', LOG_SHEET = '기록', CONTACT_SHEET = '상담접수', INFO_SHEET = '관리자 안내';
@@ -104,6 +105,8 @@ function doPost(e) {
       case 'inbox': return out_({ ok: true, items: inbox_() });
       case 'inboxDone': return out_(inboxSet_(req.id, req.done));
       case 'inboxDel': return out_(inboxDel_(req.id));
+      // 관리자 페이지 [수정 요청] → 접수 화면에 비밀번호 없이 바로 들어가기 (값은 스크립트 속성 REQ_PW 에만 둔다)
+      case 'reqpw': return out_({ ok: true, pw: PropertiesService.getScriptProperties().getProperty('REQ_PW') || '' });
       default: return out_({ ok: false, error: '알 수 없는 요청입니다.' });
     }
   } catch (err) {
