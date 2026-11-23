@@ -257,8 +257,8 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
 .B .hero .hs{position:absolute;inset:0;overflow:hidden}
 .hs-track{position:relative;height:100%}
 /* 사진 넘김: 페이드 인·아웃 */
-.hs-slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity 1.2s ease,visibility 0s linear 1.2s}
-.hs-slide:not([aria-hidden]){opacity:1;visibility:visible;z-index:1;transition:opacity 1.2s ease,visibility 0s}
+.hs-slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity var(--hs-fade,1.2s) ease-in-out,visibility 0s linear var(--hs-fade,1.2s)}
+.hs-slide:not([aria-hidden]){opacity:1;visibility:visible;z-index:1;transition:opacity var(--hs-fade,1.2s) ease-in-out,visibility 0s}
 .hs-dots{position:absolute;left:0;right:0;bottom:20px;z-index:5;display:flex;justify-content:center;gap:0}
 /* 휴대폰·태블릿 가로 화면(높이가 낮을 때): 사진을 화면 높이에 맞추고 제목을 줄여 첫 화면 안에 모두 보이게 */
 @media (min-width:601px) and (max-height:540px){.B .hero{min-height:0;height:100vh}.B .hero h1{font-size:clamp(22px,4vw,34px)}.B .hero .txt{bottom:46px}.hs-dots{bottom:2px}.B .hero .lt .bulb{bottom:58px}}
@@ -622,15 +622,17 @@ var HSLIB=['01','02','03','04','05','06','07','08','09','10','11','12'].map(func
 var HS_SAME={'1FoI_LNLkIETUBSUXqPwY1zdS-SxtrUTE':'m05','1ubhq3M3O8kxJT0D84kryCeDA0DZqQwco':'m05n'};
 function hsSame(k){var u=CT.up&&CT.up[k],m=u&&/id=([\w-]+)/.exec(u);return (m&&HS_SAME[m[1]])||k;}
 /* 넘김 간격(초): 관리자에서 2~12초로 정함. 기본 5초 */
+/* 사진이 바뀌는(페이드) 시간(초): 관리자에서 0.5~3초로 정함. 기본 1.2초. 넘김 간격보다 길지 않게 */
+function hsFade(){var n=+CT.hsFade;n=(n>=0.5&&n<=3)?n:1.2;return Math.min(n,hsSec()-0.5);}
 function hsSec(){var n=+CT.hsSec;return (n>=2&&n<=12)?n:5;}
 function hsList(){var L=(CT.hs&&CT.hs.length)?CT.hs:HS.map(function(k){return ['m'+k,'m'+k+'n'];});return L.filter(function(p){return p&&p[0]&&p[1];}).map(function(p){return [hsSame(p[0]),hsSame(p[1])];});}
 function hsImg(t,x,eager){
   var u=CT.up&&CT.up[x];
   /* 관리자에서 올린 사진(구글 드라이브): 휴대폰은 1600px, PC는 3200px 로 받아 선명하게 */
   if(u&&/drive\.google\.com\/thumbnail/.test(u)){var a=u.replace(/sz=w\d+/,'sz=w1600'),b=u.replace(/sz=w\d+/,'sz=w3200');return t.replace('src="'+u+'"','src="'+a+'" srcset="'+a+' 1600w, '+b+' 3200w" sizes="100vw"');}
-  return t.replace('src="img/'+x+'.jpg"','src="img/'+x+'-m.jpg" srcset="img/'+x+'-m.jpg 1600w, img/'+x+'.jpg 3200w" sizes="100vw"');}
+  var V='?v=3200';return t.replace('src="img/'+x+'.jpg"','src="img/'+x+'-m.jpg'+V+'" srcset="img/'+x+'-m.jpg'+V+' 1600w, img/'+x+'.jpg'+V+' 3200w" sizes="100vw"');}
 function blhero(){
-  var h='<div class="hs" id="hs" aria-roledescription="carousel" aria-label="시공 현장 사진"><div class="hs-track">';
+  var h='<div class="hs" id="hs" style="--hs-fade:'+hsFade()+'s" aria-roledescription="carousel" aria-label="시공 현장 사진"><div class="hs-track">';
   var HL=hsList();
   HL.forEach(function(p,i){var t=light(p,'r32','린앤제이 시공 현장 '+(i+1),false).replace('<div class="lt ','<div class="lt lh ');
     t=hsImg(hsImg(t,p[0]),p[1]);if(i===0)t=t.replace(/ loading="lazy"/g,'');

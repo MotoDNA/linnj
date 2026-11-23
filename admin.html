@@ -428,6 +428,7 @@ function hsOwn(){if(!DRAFT.hs)DRAFT.hs=clone(DEF.hs);return DRAFT.hs;}
 function hsThumb(k){return (DRAFT.up&&DRAFT.up[k])||(SAVED.up&&SAVED.up[k])||('img/'+k+'-m.jpg');}
 function hsHas(L,p){return L.some(function(x){return x[0]===p[0]&&x[1]===p[1];});}
 /* 준비된 사진 목록: 처음에는 제작사가 맞춰 둔 12쌍. 슬라이드에서 뺀 사진은 여기로 돌아오고, 여기서 지울 수도 있다 */
+function hsFadeCur(){var n=+(DRAFT.hsFade!=null?DRAFT.hsFade:1.2);return (n>=0.5&&n<=3)?n:1.2;}
 function hsSecCur(){var n=+(DRAFT.hsSec!=null?DRAFT.hsSec:5);return (n>=2&&n<=12)?n:5;}
 function libCur(){return DRAFT.hsLib||DEF.hsLib;}
 function libOwn(){if(!DRAFT.hsLib)DRAFT.hsLib=clone(DEF.hsLib);return DRAFT.hsLib;}
@@ -444,7 +445,11 @@ V.hero=function(b){
     '<div class="card"><h3>넘어가는 속도</h3><p class="hint">사진 한 장이 화면에 머무는 시간입니다. 2초부터 12초까지 정할 수 있어요. (처음 설정: 5초)</p>'+
     '<div class="row" style="gap:14px;align-items:center"><input type="range" id="hsSec" min="2" max="12" step="1" value="'+hsSecCur()+'" style="flex:1;max-width:420px" aria-label="넘어가는 속도(초)"><b id="hsSecV" style="min-width:56px;font-size:18px">'+hsSecCur()+'초</b>'+
     (DRAFT.hsSec!=null&&+DRAFT.hsSec!==5?'<button class="btn link" type="button" id="hsSecDef">5초로</button>':'')+'</div>'+
-    '<div class="row" style="gap:6px;margin-top:10px">'+[3,5,7,10].map(function(n){return '<button class="btn sm" type="button" data-sec="'+n+'"'+(hsSecCur()===n?' style="background:#1C1A18;color:#fff;border-color:#1C1A18"':'')+'>'+n+'초</button>';}).join('')+'</div></div>'+
+    '<div class="row" style="gap:6px;margin-top:10px">'+[3,5,7,10].map(function(n){return '<button class="btn sm" type="button" data-sec="'+n+'"'+(hsSecCur()===n?' style="background:#1C1A18;color:#fff;border-color:#1C1A18"':'')+'>'+n+'초</button>';}).join('')+'</div>'+
+    '<h3 style="margin-top:22px">사진이 바뀌는 시간 (페이드)</h3><p class="hint">앞 사진이 서서히 사라지고 다음 사진이 나타나는 데 걸리는 시간입니다. 길수록 천천히, 부드럽게 바뀌어요. (처음 설정: 1.2초)</p>'+
+    '<div class="row" style="gap:14px;align-items:center"><input type="range" id="hsFade" min="0.5" max="3" step="0.1" value="'+hsFadeCur()+'" style="flex:1;max-width:420px" aria-label="사진이 바뀌는 시간(초)"><b id="hsFadeV" style="min-width:56px;font-size:18px">'+hsFadeCur()+'초</b>'+
+    (DRAFT.hsFade!=null&&+DRAFT.hsFade!==1.2?'<button class="btn link" type="button" id="hsFadeDef">1.2초로</button>':'')+'</div>'+
+    '<div class="row" style="gap:6px;margin-top:10px">'+[0.8,1.2,2,3].map(function(n){return '<button class="btn sm" type="button" data-fade="'+n+'"'+(hsFadeCur()===n?' style="background:#1C1A18;color:#fff;border-color:#1C1A18"':'')+'>'+n+'초</button>';}).join('')+'</div></div>'+
     '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>준비된 사진에서 넣기 ('+lib.length+'쌍)</h3><p class="hint" style="margin:0">「넣기」를 누르면 슬라이드 맨 뒤에 들어가요. 위에서 뺀 사진도 여기로 옵니다. 다시 쓰지 않을 사진은 「지우기」로 목록에서 없앨 수 있어요.</p></div>'+(gone.length?'<button class="btn link" type="button" id="libBack">지운 사진 되살리기 ('+gone.length+')</button>':'')+'</div>'+
     (lib.length?'<div class="hsg" style="margin-top:12px">'+lib.map(function(p){var k=LB.indexOf(p);return '<div class="hsa">'+pairImg(p)+'<div class="act"><button class="btn sm" type="button" data-lib="'+k+'">+ 넣기</button><button class="btn sm del" type="button" data-libdel="'+k+'">지우기</button></div></div>';}).join('')+'</div>':'<div class="empty" style="margin-top:12px">준비된 사진을 모두 쓰고 있어요.</div>')+'</div>'+
     '<div class="card"><h3>새 사진 쌍 올리기</h3><p class="hint">같은 자리에서 같은 구도로 찍은 사진 두 장(조명 끈 사진, 켠 사진)을 올려 주세요. 구도가 다르면 마우스를 움직일 때 사진이 어긋나 보여요. 가로 사진(3:2)이 가장 잘 맞습니다.</p>'+
@@ -467,6 +472,12 @@ V.hero=function(b){
     sr.addEventListener('input',function(){b.querySelector('#hsSecV').textContent=sr.value+'초';});
     sr.addEventListener('change',function(){setSec(sr.value);draw2();where('','#hs');toast(sr.value+'초마다 넘어가요. 저장하기를 눌러야 반영됩니다.');});
     b.querySelectorAll('[data-sec]').forEach(function(x){x.addEventListener('click',function(){setSec(x.dataset.sec);draw2();where('','#hs');toast(x.dataset.sec+'초마다 넘어가요. 저장하기를 눌러야 반영됩니다.');});});
+    var fr=b.querySelector('#hsFade');
+    function setFade(n){n=Math.round(Math.max(0.5,Math.min(3,+n||1.2))*10)/10;if(n===1.2)delete DRAFT.hsFade;else DRAFT.hsFade=n;changed();}
+    fr.addEventListener('input',function(){b.querySelector('#hsFadeV').textContent=fr.value+'초';});
+    fr.addEventListener('change',function(){setFade(fr.value);draw2();where('','#hs');toast('사진이 '+hsFadeCur()+'초 동안 바뀌어요. 저장하기를 눌러야 반영됩니다.');});
+    b.querySelectorAll('[data-fade]').forEach(function(x){x.addEventListener('click',function(){setFade(x.dataset.fade);draw2();where('','#hs');toast('사진이 '+hsFadeCur()+'초 동안 바뀌어요. 저장하기를 눌러야 반영됩니다.');});});
+    var fd=b.querySelector('#hsFadeDef');if(fd)fd.addEventListener('click',function(){setFade(1.2);draw2();where('','#hs');});
     var sd=b.querySelector('#hsSecDef');if(sd)sd.addEventListener('click',function(){setSec(5);draw2();where('','#hs');});
     var rb=b.querySelector('#libBack');if(rb)rb.addEventListener('click',function(){var LB=libOwn(),L=hsCur();DEF.hsLib.forEach(function(p){if(!hsHas(LB,p)&&!hsHas(L,p))LB.push(clone(p));});changed();draw2();toast('지운 사진을 되살렸어요.');});
     var d=b.querySelector('#hsDef');if(d)d.addEventListener('click',function(){if(!confirm('메인 슬라이드를 처음 내용(1~6번)으로 되돌릴까요?'))return;delete DRAFT.hs;changed();draw2();where('','#hs');});
