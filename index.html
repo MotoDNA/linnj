@@ -663,8 +663,21 @@ function heroTxt(){
   var cls='txt wrap'+((tp.set||free)?' pos':'')+((tp.set&&tp.x>60)||(free&&sp.x>60)?' pr':'');
   var st='--x:'+tp.x+'%;--y:'+tp.y+'%;--al:'+tp.al+';--sx:'+sp.x+'%;--sy:'+sp.y+'%;--sal:'+sp.al+';'+hstyle('t')+hstyle('s');
   var l1='<span class="l1">'+esc(t).replace(/\n/g,'<br>')+'</span>',sub=esc(sb).replace(/\n/g,'<br>');
-  var h1='<h1 class="hsub"><span class="ht">'+l1+(sb&&!free?'<span class="l2">'+sub+'</span>':'')+'</span></h1>';
+  /* 함께 움직일 때: 작은 문구 자리(큰 제목 아래/위), 정렬(왼쪽/가운데/오른쪽), 간격(px) — CT.subRel */
+  var R=CT.subRel||{},above=R.pos==='above',sal=/^(left|center|right)$/.test(R.al)?R.al:'right',gap=(R.gap!=null&&isFinite(+R.gap))?Math.max(0,Math.min(80,+R.gap)):null;
+  var l2=sb&&!free?'<span class="l2" style="text-align:'+sal+';'+(gap!=null?(above?'margin:0 0 ':'margin:')+(above?gap+'px':gap+'px 0 0'):(above?'margin:0 0 .6em':''))+'">'+sub+'</span>':'';
+  var h1='<h1 class="hsub"><span class="ht">'+(above?l2+l1:l1+l2)+'</span></h1>';
   return '<div class="'+cls+'" style="'+st+'"><div class="tin">'+h1+(free?'<p class="sub2">'+sub+'</p>':'')+'</div></div>';}
+/* 따로 놓은 작은 문구가 화면이 작아져 큰 제목과 겹치면, 정한 순서(위/아래)를 지키며 바로 옆으로 밀어 냄. 화면 끝을 넘으면 둘 다 함께 올리거나 내림 */
+function heroFix(){var tx=document.querySelector('.B .hero .txt.pos');if(!tx)return;var s=tx.querySelector('.sub2'),h=tx.querySelector('h1');if(!s||!h)return;
+  s.style.translate='';h.style.translate='';if(innerWidth<=600)return;
+  var a=h.getBoundingClientRect(),b=s.getBoundingClientRect(),z=tx.querySelector('.tin').getBoundingClientRect(),g=10;
+  if(a.right<=b.left||b.right<=a.left||a.bottom+g<=b.top||b.bottom+g<=a.top)return;
+  var below=hpos(CT.subPos,100,100).y>=hpos(CT.heroPos,0,100).y,ds,dh=0;
+  if(below){ds=a.bottom+g-b.top;var over=b.bottom+ds-z.bottom;if(over>0){ds-=over;dh=-over;}}
+  else{ds=a.top-g-b.bottom;var under=z.top-(b.top+ds);if(under>0){ds+=under;dh=under;}}
+  s.style.translate='0 '+Math.round(ds)+'px';if(dh)h.style.translate='0 '+Math.round(dh)+'px';}
+(function(){var t;addEventListener('resize',function(){clearTimeout(t);t=setTimeout(heroFix,80);});if(document.fonts&&document.fonts.ready)document.fonts.ready.then(heroFix);})();
 function hsList(){var D=HS.map(function(k){return ['m'+k,'m'+k+'n'];}),L=(CT.hs&&CT.hs.length)?CT.hs:D;
   /* 사진이 한 장 빠진 쌍(관리자에서 지운 칸)은 건너뜀. 모두 비면 처음 사진 */
   L=L.filter(function(p){return p&&p[0]&&p[1];});if(!L.length)L=D;return L.map(function(p){return [hsSame(p[0]),hsSame(p[1])];});}
@@ -1002,7 +1015,7 @@ function render(){
     kb(0);
     timer=setInterval(function(){go((i+1)%sl.length);},3000);
   }
-  if(pg==='home'){(function(){
+  if(pg==='home'){heroFix();setTimeout(heroFix,300);(function(){
     var hs=document.getElementById('hs');if(!hs)return;
     var sl=hs.querySelectorAll('.hs-slide'),ds=hs.querySelectorAll('.hs-dots button'),i=0,hold=false;
     function load(n){var e=sl[n%sl.length];if(e)e.querySelectorAll('img[loading]').forEach(function(im){im.loading='eager';});}
