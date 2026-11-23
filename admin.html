@@ -89,6 +89,17 @@ input:focus,textarea:focus,select:focus{outline:2px solid #C9AE84;outline-offset
 .hsp figure{margin:0;flex:1 1 0;min-width:0;max-width:150px}
 .hsp img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:4px;background:#EEE9E1}
 .hsp figcaption{font-size:11px;color:#8A8278;margin-top:2px}
+.hsf{position:relative}
+.hsf .hsact{position:absolute;top:4px;right:4px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.hsf:hover .hsact,.hsf:focus-within .hsact{opacity:1}
+@media (hover:none){.hsf .hsact{opacity:1}}
+.hsact button{width:30px;height:30px;border:0;border-radius:6px;background:rgba(255,255,255,.94);box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer;display:grid;place-items:center;padding:0;color:#1C1A18}
+.hsact button:hover{background:#fff}.hsact button.del:hover{color:#B3261E}
+.hsact svg{width:16px;height:16px}
+.hsf.vac .hsup{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:3/2;border:1.5px dashed #B9AFA2;border-radius:4px;background:#F6F3EE;color:#5C554D;font:inherit;font-size:13px;cursor:pointer}
+.hsf.vac .hsup:hover{border-color:#1C1A18;color:#1C1A18;background:#FFF}
+.hsr.miss{border-color:#E7B8B2;background:#FDF6F5}
+.hsr .warn{display:block;font-size:11px;color:#B3261E;margin-top:4px}
 .hsg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
 .hsa{border:1px solid #E7E2DA;border-radius:8px;background:#FBFAF8;padding:8px}
 .hsa .act{display:flex;gap:6px;margin-top:8px}.hsa .act .btn{flex:1}
@@ -442,12 +453,19 @@ function libCur(){return DRAFT.hsLib||DEF.hsLib;}
 function libOwn(){if(!DRAFT.hsLib)DRAFT.hsLib=clone(DEF.hsLib);return DRAFT.hsLib;}
 V.hero=function(b){
   var NEW=[null,null];
+  var PEN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>',
+      BIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></svg>';
+  /* 지금 나오는 사진: 사진마다 마우스를 올리면 오른쪽 위에 연필(바꾸기)·휴지통(지우기). 지운 칸은 '+ 사진 올리기' */
+  function pairEdit(p,i){var nm=['조명 꺼짐','조명 켜짐'];return '<div class="hsp">'+[0,1].map(function(j){var k=p[j];
+    if(!k)return '<figure class="hsf vac"><button type="button" class="hsup" data-up="'+i+','+j+'">+ 사진 올리기</button><figcaption>'+nm[j]+'</figcaption></figure>';
+    return '<figure class="hsf"><img src="'+esc(hsThumb(k))+'" alt="'+(i+1)+'번 '+nm[j]+' 사진" loading="lazy"><div class="hsact"><button type="button" data-ed="'+i+','+j+'" title="'+nm[j]+' 사진 바꾸기" aria-label="'+(i+1)+'번 '+nm[j]+' 사진 바꾸기">'+PEN+'</button><button type="button" class="del" data-del="'+i+','+j+'" title="'+nm[j]+' 사진 지우기" aria-label="'+(i+1)+'번 '+nm[j]+' 사진 지우기">'+BIN+'</button></div><figcaption>'+nm[j]+'</figcaption></figure>';}).join('')+'</div>';}
   function pairImg(p){return '<div class="hsp"><figure><img src="'+esc(hsThumb(p[0]))+'" alt="" loading="lazy"><figcaption>조명 꺼짐</figcaption></figure><figure><img src="'+esc(hsThumb(p[1]))+'" alt="" loading="lazy"><figcaption>조명 켜짐</figcaption></figure></div>';}
   function draw2(){
     var L=hsCur(),LB=libCur(),lib=LB.filter(function(p){return !hsHas(L,p);}),gone=DEF.hsLib.filter(function(p){return !hsHas(LB,p)&&!hsHas(L,p);});
     b.innerHTML=chips([['첫 화면 슬라이드','','#hs']])+
     '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>지금 나오는 사진 ('+L.length+'장)</h3><p class="hint" style="margin:0">1번부터 순서대로 '+hsSecCur()+'초마다 넘어갑니다. 왼쪽이 조명 꺼진 사진, 오른쪽이 켜진 사진이에요. 홈페이지에서는 사진 왼쪽에 마우스를 두면 꺼지고, 오른쪽에 두면 켜집니다.</p></div>'+(DRAFT.hs?'<button class="btn link" type="button" id="hsDef">처음 내용으로</button>':'')+'</div>'+
-    '<div class="hsl">'+L.map(function(p,i){return '<div class="hsr"><span class="no">'+(i+1)+'</span>'+pairImg(p)+
+    '<input class="sr" type="file" id="hsPick" accept="image/*">'+
+    '<div class="hsl">'+L.map(function(p,i){var miss=!p[0]||!p[1];return '<div class="hsr'+(miss?' miss':'')+'"><span class="no">'+(i+1)+'</span><div style="flex:1 1 auto;min-width:0">'+pairEdit(p,i)+(miss?'<span class="warn">사진 두 장(꺼짐·켜짐)이 모두 있어야 홈페이지에 나옵니다.</span>':'')+'</div>'+
       '<div class="ctl"><button class="btn sm" type="button" data-mv="-1" data-i="'+i+'" aria-label="'+(i+1)+'번 위로" '+(i?'':'disabled')+'>▲</button><button class="btn sm" type="button" data-mv="1" data-i="'+i+'" aria-label="'+(i+1)+'번 아래로" '+(i<L.length-1?'':'disabled')+'>▼</button><button class="btn sm del" type="button" data-rm="'+i+'" '+(L.length>1?'':'disabled title="사진이 1장은 있어야 해요"')+'>빼기</button></div></div>';}).join('')+'</div>'+
     '<p class="hint" style="margin:12px 0 0">사진이 많을수록 한 바퀴 도는 시간이 길어집니다. 6~8장을 권해요. (최대 '+HS_MAX+'장)</p></div>'+
     '<div class="card"><h3>넘어가는 속도</h3><p class="hint">사진 한 장이 화면에 머무는 시간입니다. 2초부터 12초까지 정할 수 있어요. (처음 설정: 5초)</p>'+
@@ -462,10 +480,20 @@ V.hero=function(b){
     '</div><div class="row" style="margin-top:12px"><button class="btn" type="button" id="hsAdd" '+(NEW[0]&&NEW[1]?'':'disabled')+'>이 사진 쌍 넣기</button></div></div>';
     wireChips(b);
     var box=b.querySelector('.hsl');
-    box.addEventListener('click',function(e){var x=e.target.closest('button');if(!x||x.disabled)return;var L=hsOwn(),i=+x.dataset.i;
+    var pick=b.querySelector('#hsPick'),PT=null;
+    pick.addEventListener('change',function(e){var f=e.target.files[0];pick.value='';if(!f||!PT)return;var t=PT;PT=null;
+      readPhoto(f,function(k){var L=hsOwn(),p=L[t[0]];if(!p)return;
+        var other=p[1-t[1]],dm=Object.assign({},SAVED.dim||{},DRAFT.dim||{}),r0=dm[k],r1=other?(dm[other]||(/^m\d/.test(other)?0.667:null)):null;
+        if(r0&&r1&&Math.abs(r0-r1)/r1>.03&&!confirm('짝이 되는 사진과 가로세로 비율이 달라요. 같은 구도로 찍은 사진이 아니면 마우스를 움직일 때 어긋나 보일 수 있어요. 그래도 넣을까요?'))return;
+        L[t[0]]=p.slice();L[t[0]][t[1]]=k;changed();draw2();where('','#hs');toast((t[0]+1)+'번 '+(t[1]?'조명 켜진':'조명 꺼진')+' 사진을 바꿨어요. 저장하기를 눌러야 반영됩니다.');});});
+    box.addEventListener('click',function(e){var x=e.target.closest('button');if(!x||x.disabled)return;
+      var pe=x.dataset.ed||x.dataset.up;if(pe){PT=pe.split(',').map(Number);pick.click();return;}
+      if(x.dataset.del){var t=x.dataset.del.split(',').map(Number),L0=hsOwn();if(!confirm((t[0]+1)+'번 '+(t[1]?'조명 켜진':'조명 꺼진')+' 사진을 지울까요? 빈 칸에 새 사진을 올릴 수 있어요.'))return;
+        L0[t[0]]=L0[t[0]].slice();L0[t[0]][t[1]]=null;changed();draw2();where('','#hs');return;}
+      var L=hsOwn(),i=+x.dataset.i;
       if(x.dataset.mv){var j=i+(+x.dataset.mv);var t=L[i];L[i]=L[j];L[j]=t;}
       else if(x.dataset.rm!=null){if(L.length<2)return;if(!confirm((+x.dataset.rm+1)+'번 사진을 슬라이드에서 뺄까요? 아래 "준비된 사진"으로 옮겨지고, 언제든 다시 넣을 수 있어요.'))return;
-        var p=L.splice(+x.dataset.rm,1)[0];if(p&&!hsHas(libCur(),p))libOwn().push(p);}
+        var p=L.splice(+x.dataset.rm,1)[0];if(p&&p[0]&&p[1]&&!hsHas(libCur(),p))libOwn().push(p);}
       changed();draw2();where('','#hs');});
     b.querySelectorAll('[data-lib]').forEach(function(x){x.addEventListener('click',function(){var L=hsOwn();if(L.length>=HS_MAX){toast('최대 '+HS_MAX+'장까지 넣을 수 있어요.');return;}L.push(clone(libCur()[+x.dataset.lib]));changed();draw2();toast((L.length)+'번째로 넣었어요.');where('','#hs');});});
     b.querySelectorAll('[data-libdel]').forEach(function(x){x.addEventListener('click',function(){

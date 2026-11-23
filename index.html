@@ -665,7 +665,9 @@ function heroTxt(){
   var l1='<span class="l1">'+esc(t).replace(/\n/g,'<br>')+'</span>',sub=esc(sb).replace(/\n/g,'<br>');
   var h1='<h1 class="hsub"><span class="ht">'+l1+(sb&&!free?'<span class="l2">'+sub+'</span>':'')+'</span></h1>';
   return '<div class="'+cls+'" style="'+st+'"><div class="tin">'+h1+(free?'<p class="sub2">'+sub+'</p>':'')+'</div></div>';}
-function hsList(){var L=(CT.hs&&CT.hs.length)?CT.hs:HS.map(function(k){return ['m'+k,'m'+k+'n'];});return L.filter(function(p){return p&&p[0]&&p[1];}).map(function(p){return [hsSame(p[0]),hsSame(p[1])];});}
+function hsList(){var D=HS.map(function(k){return ['m'+k,'m'+k+'n'];}),L=(CT.hs&&CT.hs.length)?CT.hs:D;
+  /* 사진이 한 장 빠진 쌍(관리자에서 지운 칸)은 건너뜀. 모두 비면 처음 사진 */
+  L=L.filter(function(p){return p&&p[0]&&p[1];});if(!L.length)L=D;return L.map(function(p){return [hsSame(p[0]),hsSame(p[1])];});}
 function hsImg(t,x,eager){
   var u=CT.up&&CT.up[x];
   /* 관리자에서 올린 사진(구글 드라이브): 휴대폰은 1600px, PC는 3200px 로 받아 선명하게 */
