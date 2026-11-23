@@ -227,7 +227,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid #C9AE84;outline-offset
         <button class="btn sm close" type="button" id="closePrev">닫기</button>
       </div>
     </div>
-    <div class="frame" id="frame"><div class="fit" id="fit"><iframe id="pf" title="홈페이지 미리보기" src="index.html?preview#a"></iframe></div></div>
+    <div class="frame" id="frame"><div class="fit" id="fit"><iframe id="pf" title="홈페이지 미리보기" src="about:blank"></iframe></div></div>
   </aside>
 </div>
 
@@ -344,6 +344,7 @@ function showErr(list){var b=$('#body');var old=$('#errbox');if(old)old.remove()
 
 /* ---------- 공통 조각 ---------- */
 function txField(k){
+  if(!DEF.tx[k])return '';
   var t=DEF.tx[k],v=txv(k),ch=DRAFT.tx&&DRAFT.tx[k]!=null;
   var inp=t.one?'<input type="text" id="tx_'+k+'" data-tx="'+k+'" value="'+esc(v)+'">':'<textarea id="tx_'+k+'" data-tx="'+k+'" rows="'+(t.big?5:3)+'">'+esc(v)+'</textarea>';
   return '<div class="f"><label for="tx_'+k+'"><span>'+esc(t.l)+'</span><span>'+(ch?'<span class="chg">바꾼 문구</span> <button class="btn link" type="button" data-reset="'+k+'">기본 문구로</button>':'')+'</span></label>'+inp+'</div>';
@@ -729,7 +730,7 @@ function segV(){$('#vseg').style.display='none';$('#vseg').innerHTML=['bw'].map(
 function start(){
   if(PRACTICE){SAVED=lsGet(KEY)||{};LOADED=true;}
   else{SAVED={};$('#body').innerHTML='<div class="empty">홈페이지 내용을 불러오는 중…</div>';
-    apiGet().then(function(c){delete c.updated;SAVED=c;DRAFT=clone(SAVED);LOADED=true;draw();preview(true);})
+    apiGet().then(function(c){delete c.updated;SAVED=c;DRAFT=clone(SAVED);LOADED=true;try{draw();}catch(e){showErr(['화면을 그리는 중 문제가 생겼어요. 새로 고침(Ctrl+Shift+R) 해 주세요.']);}preview(true);})
      .catch(function(){showErr(['홈페이지 내용을 불러오지 못했어요. 인터넷 연결을 확인하고 새로 고침해 주세요. (불러오기 전에는 저장할 수 없어요)']);});
     loadInbox();loadHist().then(function(){if(VIEW==='home'&&LOADED)draw();});}
   DRAFT=clone(SAVED);
@@ -751,8 +752,10 @@ function boot(){
   $('#login').classList.add('hide');$('#app').classList.remove('hide');
   try{sessionStorage.setItem('lj_admin_in','1');}catch(e){}
   var pf=$('#pf'),tries=0;
-  function ready(){var w=pw();if(w&&w.LJ_DEFAULTS){DEF=w.LJ_DEFAULTS();start();}else if(++tries<60)setTimeout(ready,100);else $('#body').innerHTML='<div class="err">홈페이지를 불러오지 못했어요. 새로 고침해 주세요.</div>';}
-  if(pf.contentWindow&&pf.contentWindow.LJ_DEFAULTS)ready();else pf.addEventListener('load',ready);
+  var started=false;
+  function ready(){var w=pw();if(started)return;if(w&&w.LJ_DEFAULTS){started=true;DEF=w.LJ_DEFAULTS();start();}else if(++tries<60)setTimeout(ready,100);else $('#body').innerHTML='<div class="err">홈페이지를 불러오지 못했어요. 새로 고침해 주세요.</div>';}
+  pf.addEventListener('load',function(){if(pf.contentWindow&&pf.contentWindow.LJ_DEFAULTS)ready();});
+  pf.src='index.html?preview&v='+Date.now()+'#a';
   setTimeout(fitFrame,50);
 }
 /* ---------- 비밀번호 ---------- */
