@@ -254,18 +254,26 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
 .B .hero{position:relative;height:100vh;max-height:none;min-height:560px}
 .B .hero .lt{position:absolute;inset:0;aspect-ratio:auto;height:100%}
 .B .hero .hs{position:absolute;inset:0;overflow:hidden}
-.hs-track{display:flex;height:100%;transition:transform 1s cubic-bezier(.65,0,.35,1)}
-.hs-slide{position:relative;flex:0 0 100%;height:100%}
+.hs-track{position:relative;height:100%}
+/* 사진 넘김: 페이드 인·아웃 */
+.hs-slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity 1.2s ease,visibility 0s linear 1.2s}
+.hs-slide:not([aria-hidden]){opacity:1;visibility:visible;z-index:1;transition:opacity 1.2s ease,visibility 0s}
 .hs-dots{position:absolute;left:0;right:0;bottom:20px;z-index:5;display:flex;justify-content:center;gap:0}
 /* 휴대폰·태블릿 가로 화면(높이가 낮을 때): 사진을 화면 높이에 맞추고 제목을 줄여 첫 화면 안에 모두 보이게 */
 @media (min-width:601px) and (max-height:540px){.B .hero{min-height:0;height:100vh}.B .hero h1{font-size:clamp(22px,4vw,34px)}.B .hero .txt{bottom:46px}.hs-dots{bottom:2px}.B .hero .lt .bulb{bottom:58px}}
 .hs-dots[hidden]{display:none}
-.hs-dots button{width:24px;height:44px;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center}
-.hs-dots button::before{content:"";width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);box-sizing:border-box;transition:background .3s,border-color .3s}
-.hs-dots button[aria-current="true"]::before{background:rgba(255,255,255,.6);border-color:rgba(255,255,255,.6)}
-.hs-dots button:hover::before{border-color:rgba(255,255,255,.85)}
-.hs-dots button:focus-visible{outline:2px solid #fff;outline-offset:-6px;border-radius:50%}
-@media (prefers-reduced-motion:reduce){.hs-track{transition:none}}
+/* 페이지네이션 ④ 채워지는 진행 막대 (24px, 5초 동안 차오름 · 조명이 켜지면 멈춤) */
+.hs-dots button{position:relative;width:30px;height:44px;padding:0;border:0;background:none;cursor:pointer}
+.hs-dots button::before,.hs-dots button::after{content:"";position:absolute;left:3px;top:21px;height:2px}
+.hs-dots button::before{width:24px;background:rgba(255,255,255,.32);transition:background .3s}
+.hs-dots button:hover::before{background:rgba(255,255,255,.5)}
+.hs-dots button::after{width:0;background:rgba(255,255,255,.92)}
+.hs-dots button.done::after{width:24px}
+.hs-dots button[aria-current="true"]::after{animation:hsfill 5s linear forwards}
+.hs.paused .hs-dots button[aria-current="true"]::after{animation-play-state:paused}
+.hs-dots button:focus-visible{outline:2px solid #fff;outline-offset:-8px;border-radius:4px}
+@keyframes hsfill{to{width:24px}}
+@media (prefers-reduced-motion:reduce){.hs-slide,.hs-slide:not([aria-hidden]){transition:none}.hs-dots button[aria-current="true"]::after{animation:none;width:24px}}
 .bh{position:absolute;inset:0;overflow:hidden;background:#121110}
 .bh img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease;transform:scale(1.02)}
 .bh img.on{opacity:1;animation:bhz 3.6s ease-out both}
@@ -351,8 +359,11 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
  .B .hero{height:auto;max-height:none;min-height:0;padding-top:calc(var(--hh,96px) + 66.667vw)}
  .B .hero .bh,.B .hero .hs{top:var(--hh,96px);bottom:auto;height:66.667vw}
  .hs-dots{bottom:2px}
- .hs-dots button{width:20px}
- .hs-dots button::before{width:8px;height:8px;border-width:1px}
+ .hs-dots button{width:26px}
+ .hs-dots button::before{width:20px}
+ .hs-dots button.done::after{width:20px}
+ @keyframes hsfill{to{width:20px}}
+ @media (prefers-reduced-motion:reduce){.hs-dots button[aria-current="true"]::after{width:20px}}
  .B .hero .bshade{display:none}
  .B.BW .hdr.over{background:rgba(255,255,255,.96);border-bottom:1px solid #E6E1D8;color:#1C1A18}
  .B.BW .hero .txt{color:inherit}
@@ -937,22 +948,31 @@ function render(){
   }
   if(pg==='home'){(function(){
     var hs=document.getElementById('hs');if(!hs)return;
-    var tr=hs.querySelector('.hs-track'),sl=hs.querySelectorAll('.hs-slide'),ds=hs.querySelectorAll('.hs-dots button'),i=0,hold=false;
+    var sl=hs.querySelectorAll('.hs-slide'),ds=hs.querySelectorAll('.hs-dots button'),i=0,hold=false;
     function load(n){var e=sl[n%sl.length];if(e)e.querySelectorAll('img[loading]').forEach(function(im){im.loading='eager';});}
     function go(n){n=(n+sl.length)%sl.length;load(n);load(n+1);
       var old=sl[i];if(old){var l=old.querySelector('.lt');if(l&&!l.classList.contains('pin'))l.classList.remove('on');}
-      i=n;tr.style.transform='translateX(-'+(i*100)+'%)';
+      i=n;
       sl.forEach(function(s,j){if(j===i)s.removeAttribute('aria-hidden');else s.setAttribute('aria-hidden','true');});
-      ds.forEach(function(d,j){if(j===i)d.setAttribute('aria-current','true');else d.removeAttribute('aria-current');});}
-    function play(){clearInterval(timer);timer=setInterval(function(){if(!document.hidden)go(i+1);},5000);}
+      ds.forEach(function(d){d.removeAttribute('aria-current');});void hs.offsetWidth;   /* 진행 막대를 처음부터 다시 */
+      ds.forEach(function(d,j){d.classList.toggle('done',j<i);if(j===i)d.setAttribute('aria-current','true');});}
+    /* 5초마다 넘김. 조명이 켜져 있는 동안은 멈추고, 꺼지면 남은 시간만큼 이어서 */
+    var DUR=5000,left=DUR,t0=0,paused=false,pi=-1;
+    function lit(){var l=sl[i]&&sl[i].querySelector('.lt');return !!(l&&l.classList.contains('on'));}
+    function tick(){if(document.hidden){play();return;}if(lit())return;go(i+1);play();}
+    function play(){clearTimeout(timer);left=DUR;t0=Date.now();timer=setTimeout(tick,left);}
+    function sync(){var p=lit();if(p===paused)return;paused=p;hs.classList.toggle('paused',p);
+      if(p){clearTimeout(timer);left=Math.max(0,left-(Date.now()-t0));pi=i;}
+      else if(pi===i){t0=Date.now();timer=setTimeout(tick,left);}
+      else play();}
+    if(sl.length>1)new MutationObserver(sync).observe(hs,{subtree:true,attributes:true,attributeFilter:['class']});
     ds.forEach(function(d){d.addEventListener('click',function(e){e.stopPropagation();go(+d.getAttribute('data-i'));play();});});
-    /* 5초마다 무조건 넘김 (마우스를 올려도 멈추지 않음) */
     /* 휴대폰: 옆으로 밀면 다음/이전 사진 */
     var sx=0,sy=0,st=0;
     hs.addEventListener('touchstart',function(e){var t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();},{passive:true});
     hs.addEventListener('touchend',function(e){var t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
       if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3&&Date.now()-st<700){go(i+(dx<0?1:-1));play();}},{passive:true});
-    load(1);play();
+    load(1);if(sl.length>1)play();
   })();}
   if(V[v]&&pg==='home'&&v==='d'){
     var bh=app.querySelectorAll('.bh img'),bi=0,bc=0;
