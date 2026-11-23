@@ -376,21 +376,29 @@ function openPrevIfSmall(){if(window.innerWidth<=1100)$('#prev').classList.add('
 /* ---------- 사진 올리기 (연습 모드: 줄여서 브라우저에 저장) ---------- */
 function readPhoto(file,cb){
   if(!/^image\//.test(file.type)){toast('사진 파일만 올릴 수 있어요.');return;}
-  var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){
-    /* 선명하게: 긴 변 3200px 까지, 반씩 여러 번 줄여서(한 번에 크게 줄이면 뭉개짐), 품질 92% */
-    var M=PRACTICE?1600:3200,w=im.naturalWidth,h=im.naturalHeight,s=Math.min(1,M/Math.max(w,h)),W=Math.round(w*s),H=Math.round(h*s);
-    var src=im,cw=w,ch=h;
-    while(cw/2>=W){var t=document.createElement('canvas');t.width=Math.round(cw/2);t.height=Math.round(ch/2);var tx=t.getContext('2d');tx.imageSmoothingEnabled=true;tx.imageSmoothingQuality='high';tx.drawImage(src,0,0,t.width,t.height);src=t;cw=t.width;ch=t.height;}
-    var c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.fillStyle='#FFF';x.fillRect(0,0,W,H);x.drawImage(src,0,0,W,H);
-    var key='up'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-    var du=c.toDataURL('image/jpeg',PRACTICE?.85:.92);
-    if(PRACTICE){DRAFT.up=DRAFT.up||{};DRAFT.dim=DRAFT.dim||{};DRAFT.up[key]=du;DRAFT.dim[key]=Math.round(h/w*1000)/1000;cb(key);return;}
-    toast('사진을 올리는 중이에요…');
-    api({action:'upload',name:(file.name||key).replace(/\.[^.]+$/,'')+'.jpg',mime:'image/jpeg',data:du.split(',')[1]},2).then(function(j){
-      if(!j.ok){toast(j.error||'사진을 올리지 못했어요.');return;}
-      DRAFT.up=DRAFT.up||{};DRAFT.dim=DRAFT.dim||{};DRAFT.up[key]='https://drive.google.com/thumbnail?id='+j.id+'&sz=w2000';DRAFT.dim[key]=Math.round(h/w*1000)/1000;cb(key);
-    }).catch(function(){toast('인터넷 연결이 불안정해서 사진을 올리지 못했어요.');});
-  };im.onerror=function(){toast('사진을 읽지 못했어요. 다른 사진으로 해 주세요.');};im.src=r.result;};r.readAsDataURL(file);
+  /* 원본 그대로 올리기: JPG·PNG·WEBP 이고 7.5MB 이하면 파일을 손대지 않고 그대로 올린다.
+     더 크거나(카메라 원본 등) 아이폰 HEIC 처럼 바로 못 쓰는 형식이면, 긴 변 6000px·품질 95% 로만 바꾼다(눈으로는 원본과 같음). */
+  var RAW_MAX=7.5*1024*1024,OK=['image/jpeg','image/png','image/webp'].indexOf(file.type)>=0;
+  var url=URL.createObjectURL(file),im=new Image();
+  im.onerror=function(){URL.revokeObjectURL(url);toast('사진을 읽지 못했어요. JPG 나 PNG 로 바꿔서 올려 주세요.');};
+  im.onload=function(){
+    var w=im.naturalWidth,h=im.naturalHeight,key='up'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),ratio=Math.round(h/w*1000)/1000;
+    function shrink(M,q){var s=Math.min(1,M/Math.max(w,h)),W=Math.round(w*s),H=Math.round(h*s),src=im,cw=w,ch=h;
+      while(cw/2>=W){var t=document.createElement('canvas');t.width=Math.round(cw/2);t.height=Math.round(ch/2);var tx=t.getContext('2d');tx.imageSmoothingQuality='high';tx.drawImage(src,0,0,t.width,t.height);src=t;cw=t.width;ch=t.height;}
+      var c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');x.imageSmoothingQuality='high';x.fillStyle='#FFF';x.fillRect(0,0,W,H);x.drawImage(src,0,0,W,H);return c.toDataURL('image/jpeg',q);}
+    URL.revokeObjectURL(url);
+    if(PRACTICE){var d0=shrink(1600,.85);DRAFT.up=DRAFT.up||{};DRAFT.dim=DRAFT.dim||{};DRAFT.up[key]=d0;DRAFT.dim[key]=ratio;cb(key);return;}
+    function send(b64,mime,label){
+      toast('사진을 올리는 중이에요… ('+label+')');
+      api({action:'upload',name:(file.name||key).replace(/\.[^.]+$/,'')+(mime==='image/jpeg'?'.jpg':mime==='image/png'?'.png':'.webp'),mime:mime,data:b64},2).then(function(j){
+        if(!j.ok){toast(j.error||'사진을 올리지 못했어요.');return;}
+        DRAFT.up=DRAFT.up||{};DRAFT.dim=DRAFT.dim||{};DRAFT.up[key]='https://drive.google.com/thumbnail?id='+j.id+'&sz=w2000';DRAFT.dim[key]=ratio;cb(key);
+      }).catch(function(){toast('인터넷 연결이 불안정해서 사진을 올리지 못했어요.');});}
+    if(OK&&file.size<=RAW_MAX){var r=new FileReader();r.onload=function(){send(String(r.result).split(',')[1],file.type,'원본 그대로');};r.readAsDataURL(file);return;}
+    var du=shrink(6000,.95);if(du.length*.75>RAW_MAX)du=shrink(5000,.93);if(du.length*.75>RAW_MAX)du=shrink(4000,.92);
+    send(du.split(',')[1],'image/jpeg','고화질로 맞추는 중');
+  };
+  im.src=url;
 }
 
 /* ================= 화면 ================= */
