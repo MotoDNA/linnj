@@ -233,7 +233,7 @@ function lsGet(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}}
 function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove('on');},2200);}
 
-var DEF=null,SAVED={},DRAFT={},VIEW='home',EDIT=null,VAR='a',DEV='pc',TARGET=null;
+var DEF=null,SAVED={},DRAFT={},VIEW='home',EDIT=null,VAR='bw',DEV='pc',TARGET=null;
 var BANDS=[['30','30평대'],['40','40평대'],['50','50평대'],['60','60평 이상']];
 
 /* 메뉴: 홈페이지와 같은 순서 */
@@ -246,7 +246,7 @@ var MENU=[
   ['youtube','YOUTUBE','유튜브 채널 주소'],
   ['blog','BLOG','블로그 주소'],
   ['cap','그 밖에'],
-  ['texts','홈페이지 문구','시안별 첫 화면 문구 · 회사 정보'],
+  ['texts','홈페이지 문구','첫 화면 문구 · 회사 정보'],
   ['request','수정 요청','디자인·기능 수정을 제작사(디엔에이랩스)에 요청하기'],
   ['pw','비밀번호 설정','관리자 비밀번호 바꾸기']
 ];
@@ -324,7 +324,7 @@ function txField(k){
 }
 function wireTx(root){
   root.querySelectorAll('[data-tx]').forEach(function(el){
-    el.addEventListener('focus',function(){var t=DEF.tx[el.getAttribute('data-tx')];if(t.v)VAR=t.v,segV();where(t.page||'',t.at||(t.v?'':''));});
+    el.addEventListener('focus',function(){var t=DEF.tx[el.getAttribute('data-tx')];where(t.page||'',t.at||(t.v?'':''));});
     el.addEventListener('input',function(){setTx(el.getAttribute('data-tx'),el.value);changed();});
     el.addEventListener('blur',function(){var k=el.getAttribute('data-tx'),lab=root.querySelector('label[for="tx_'+k+'"] span:last-child');if(lab){var ch=DRAFT.tx&&DRAFT.tx[k]!=null;lab.innerHTML=ch?'<span class="chg">바꾼 문구</span> <button class="btn link" type="button" data-reset="'+k+'">기본 문구로</button>':'';}});
   });
@@ -492,10 +492,10 @@ V.youtube=function(b){linkView(b,'yt','유튜브','메뉴의 YOUTUBE와 맨 아�
 V.blog=function(b){linkView(b,'blog','블로그','메뉴의 BLOG와 맨 아래 링크가 이 주소로 연결됩니다.','https://blog.naver.com/...');};
 
 V.texts=function(b){
-  var groups=[['a','시안 A'],['b','시안 B'],['c','시안 C'],['d','시안 D']];
+  var groups=[['b','홈페이지']];
   b.innerHTML='<div class="card"><h3>회사 정보</h3><p class="hint">맨 아래 회사 정보 줄에 나옵니다.</p>'+txField('ceo')+txField('biz')+'</div>'+
   groups.map(function(g){var ks=Object.keys(DEF.tx).filter(function(k){return DEF.tx[k].g==='hero'&&DEF.tx[k].v===g[0];});
-    return '<div class="card"><h3>'+g[1]+' 문구</h3><p class="hint">칸을 누르면 오른쪽 미리보기가 '+g[1]+'로 바뀝니다.</p>'+ks.map(txField).join('')+'</div>';}).join('');
+    return '<div class="card"><h3>'+g[1]+' 문구</h3><p class="hint">칸을 누르면 오른쪽 미리보기에서 그 문구가 나오는 곳을 보여 줍니다.</p>'+ks.map(txField).join('')+'</div>';}).join('');
   wireTx(b);
   b.querySelectorAll('[data-tx="ceo"],[data-tx="biz"]').forEach(function(el){el.addEventListener('focus',function(){where('','footer');});});
   where('','');
@@ -550,7 +550,7 @@ function draw(){
   else b.scrollTop=0;
 }
 function route(){var h=(location.hash||'#home').slice(1);if(!V[h])h='home';if(h!==VIEW)EDIT=null;VIEW=h;TARGET=null;draw();}
-function segV(){$('#vseg').innerHTML=['a','b','bw','c','d'].map(function(v){return '<button type="button" data-v="'+v+'" aria-pressed="'+(VAR===v)+'">'+({b:'B-K',bw:'B-W'}[v]||v.toUpperCase())+'</button>';}).join('');}
+function segV(){$('#vseg').style.display='none';$('#vseg').innerHTML=['bw'].map(function(v){return '<button type="button" data-v="'+v+'" aria-pressed="'+(VAR===v)+'">'+({b:'B-K',bw:'B-W'}[v]||v.toUpperCase())+'</button>';}).join('');}
 
 /* ---------- 시작 ---------- */
 function start(){

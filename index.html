@@ -245,6 +245,16 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
 @media (prefers-reduced-motion:reduce){.B .hdr{transition:none}}
 .B .hero{position:relative;height:100vh;max-height:none;min-height:560px}
 .B .hero .lt{position:absolute;inset:0;aspect-ratio:auto;height:100%}
+.B .hero .hs{position:absolute;inset:0;overflow:hidden}
+.hs-track{display:flex;height:100%;transition:transform 1s cubic-bezier(.65,0,.35,1)}
+.hs-slide{position:relative;flex:0 0 100%;height:100%}
+.hs-dots{position:absolute;left:0;right:0;bottom:30px;z-index:5;display:flex;justify-content:center;gap:0}
+.hs-dots button{width:24px;height:44px;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center}
+.hs-dots button::before{content:"";width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);box-sizing:border-box;transition:background .3s,border-color .3s}
+.hs-dots button[aria-current="true"]::before{background:rgba(255,255,255,.6);border-color:rgba(255,255,255,.6)}
+.hs-dots button:hover::before{border-color:rgba(255,255,255,.85)}
+.hs-dots button:focus-visible{outline:2px solid #fff;outline-offset:-6px;border-radius:50%}
+@media (prefers-reduced-motion:reduce){.hs-track{transition:none}}
 .bh{position:absolute;inset:0;overflow:hidden;background:#121110}
 .bh img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease;transform:scale(1.02)}
 .bh img.on{opacity:1;animation:bhz 3.6s ease-out both}
@@ -328,7 +338,10 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
  .A .hero h1{font-size:24px}
  .A .hero .dots span{background:rgba(0,0,0,.22)}.A .hero .dots button[aria-current=true] span{background:#1C1A18}
  .B .hero{height:auto;max-height:none;min-height:0;padding-top:calc(var(--hh,96px) + 66.667vw)}
- .B .hero .bh,.B .hero .lt{top:var(--hh,96px);bottom:auto;height:66.667vw}
+ .B .hero .bh,.B .hero .hs{top:var(--hh,96px);bottom:auto;height:66.667vw}
+ .hs-dots{bottom:2px}
+ .hs-dots button{width:20px}
+ .hs-dots button::before{width:8px;height:8px;border-width:1px}
  .B .hero .bshade{display:none}
  .B.BW .hdr.over{background:rgba(255,255,255,.96);border-bottom:1px solid #E6E1D8;color:#1C1A18}
  .B.BW .hero .txt{color:inherit}
@@ -578,9 +591,16 @@ function bhero(){BHQ=BH.slice();for(var i=BHQ.length-1;i>0;i--){var j=Math.floor
 var BL=['014','022','024','028','030','043','050','070','086','096','100','104','114','118','122','126','134'],BLK=BL[Math.floor(Math.random()*BL.length)];
 var BZ={'014':[24,64],'022':[28,72],'024':[33,66],'028':[30,54],'030':[30,72],'043':[35,65],'050':[30,60],'070':[38,62],'086':[40,62],'096':[45,68],'100':[40,70],'104':[33,58],'114':[42,70],'118':[40,65],'122':[50,68],'126':[33,66],'134':[35,65]};
 BL.forEach(function(k){ZN['h'+k]=BZ[k];});
-function blhero(){var k='h'+BLK,s=light([k,k+'n'],'r32','린앤제이 시공 현장',false).replace('<div class="lt ','<div class="lt lh ');
-  [k,k+'n'].forEach(function(x){s=s.replace('src="img/'+x+'.jpg"','src="img/'+x+'-m.jpg" srcset="img/'+x+'-m.jpg 1280w, img/'+x+'.jpg 2400w" sizes="100vw"');});
-  return s.replace(/ loading="lazy"/g,'');}
+/* 첫 화면 슬라이드: 12쌍(조명 꺼짐/켜짐) 중 HS 에 적힌 번호를 5초마다 넘김 */
+var HS=['01','02','03','04','05','06'];
+function hsImg(t,x,eager){return t.replace('src="img/'+x+'.jpg"','src="img/'+x+'-m.jpg" srcset="img/'+x+'-m.jpg 1280w, img/'+x+'.jpg 2400w" sizes="100vw"');}
+function blhero(){
+  var h='<div class="hs" id="hs" aria-roledescription="carousel" aria-label="시공 현장 사진"><div class="hs-track">';
+  HS.forEach(function(k,i){var o='m'+k,t=light([o,o+'n'],'r32','린앤제이 시공 현장 '+(i+1),false).replace('<div class="lt ','<div class="lt lh ');
+    t=hsImg(hsImg(t,o),o+'n');if(i===0)t=t.replace(/ loading="lazy"/g,'');
+    h+='<div class="hs-slide" role="group" aria-roledescription="slide" aria-label="'+(i+1)+' / '+HS.length+'"'+(i?' aria-hidden="true"':'')+'>'+t+'</div>';});
+  h+='</div><div class="hs-dots">'+HS.map(function(k,i){return '<button type="button" data-i="'+i+'" aria-label="'+(i+1)+'번 사진 보기"'+(i?'':' aria-current="true"')+'></button>';}).join('')+'</div></div>';
+  return h;}
 function foot(){return '<footer class="wrap"><div style="margin-bottom:6px">'+LJ(39)+'</div><div class="biz"><span>상호 린하우징&amp;제이 (린앤제이 인테리어 스튜디오)</span><span>대표 '+tx('ceo')+'</span><span>사업자등록번호 '+tx('biz')+'</span></div><div class="biz"><span>'+tx('addr')+'</span><span>T. <a href="tel:'+tx('phone').replace(/[^0-9]/g,'')+'">'+tx('phone')+'</a></span>'+(hasTx('email')?'<span>E. '+tx('email')+'</span>':'')+'</div><div class="biz" style="opacity:.75"><span>© '+new Date().getFullYear()+' Linn &amp; J Design Studio. All rights reserved.</span></div><div style="margin-top:8px">'+ext(YT,'YOUTUBE')+' &nbsp; '+ext(BLOG,'BLOG')+'</div></footer>';}
 var DIM={"c001":0.667,"c003":0.667,"c006":0.667,"c007":0.667,"c008":0.667,"c009":0.667,"c010":1.499,"c011":1.499,"c012":0.667,"c013":0.667,"c014":0.667,"c015":0.667,"c016":0.667,"c017":0.667,"c018":0.667,"c019":0.667,"c020":0.667,"c021":0.667,"c022":0.667,"c023":0.667,"c024":0.667,"c025":1.499,"c026":1.499,"c027":1.499,"c028":1.499,"c030":0.667,"c031":0.667,"c032":0.667,"c033":1.499,"c034":0.751,"c035":1.499,"c036":1.499,"c037":1.333,"c038":1.499,"c039":0.667,"c041":0.751,"c042":0.667,"c044":0.667,"c045":0.667,"c046":0.667,"c047":1.333,"c048":1.341,"c049":1.499,"c050":1.499,"c051":0.751,"c052":0.751,"g001":0.667,"g002":0.667,"g003":0.667,"g004":0.751,"g005":1.333,"g006":1.333,"g007":1.333,"g008":0.667,"g010":0.667,"g014":0.667,"g015":0.667,"g016":0.667,"g017":0.667,"g018":1.499,"g019":1.499,"g020":0.667,"g021":0.667,"g022":0.667,"g024":0.667,"g025":0.667,"g026":0.667,"g027":0.667,"g028":0.667,"g029":0.667,"g030":0.667,"g031":0.667,"g032":0.667,"g033":0.667,"g034":0.667,"g035":0.667,"g036":0.667,"g037":0.667,"g038":0.667,"g039":0.667,"g040":0.667,"g041":1.499,"g042":0.667,"g043":1.499,"g045":1.5,"g046":1.5,"g047":1.5,"g048":1.5,"g049":1.5,"g050":1.5,"g051":1.5,"g052":1.5,"g053":1.5,"g054":1.5,"g055":1.5,"g056":1.5,"g057":1.5,"g058":1.5,"g059":1.5,"g060":1.5,"g061":1.5,"g062":1.5,"g063":1.5,"g064":1.498,"g065":1.5,"g066":1.498,"m221":0.667,"m223":0.667,"m225":0.667,"m227":0.667,"m229":0.667,"m235":1.499,"m237":0.667,"m239":0.667,"m243":1.499,"m247":0.667,"m249":0.667,"m251":1.499,"m253":1.499,"m255":0.667,"m257":0.667,"m259":0.667,"m261":0.667,"m265":1.499,"m271":0.667,"m273":0.667,"m283":1.499,"m285":1.499,"m289":0.667,"m297":1.499,"m305":1.499,"m93":0.667,"m94":0.75,"u194":0.667,"u200":0.667,"u218":0.667,"u224":0.667,"u232":0.667,"u238":0.667,"u248":0.667,"u254":0.667,"u268":0.667,"u272":0.667,"u278":0.667,"u292":1.499,"u298":0.667,"u306":1.499,"u318":1.5,"u324":0.667,"w183":0.751,"w189":0.667,"w191":0.667,"w193":0.667,"w195":0.667,"w201":0.667,"w205":0.667,"w207":0.667,"w211":0.667,"w213":0.667,"w225":0.667,"w229":0.667,"w231":0.667,"w235":0.751,"w239":1.499,"w241":1.499,"w243":1.499,"w255":0.667,"w257":0.667,"w259":0.667,"w261":0.667,"w269":1.499,"w271":1.499,"w279":1.499,"w287":1.499,"w289":1.499,"z003":0.751,"z004":0.667,"z005":0.667,"z006":0.667,"z007":0.667,"z008":0.667,"z009":0.667,"z010":0.667,"z011":0.667,"z012":0.667,"z013":0.667,"z014":0.667,"z015":0.667,"z016":0.667,"z017":0.667,"z018":0.667,"z019":0.667,"z022":0.667,"z023":0.667,"z024":0.667,"z025":0.667,"z026":0.667,"z027":0.667,"z028":1.266,"z029":1.499,"z031":1.499,"z032":1.499,"z034":1.499,"z039":1.254,"z040":1.241,"z041":0.667,"z043":1.499,"z044":0.667,"z045":0.667,"z046":1.499,"z047":1.499,"z050":0.667,"z051":1.499,"z054":1.499,"z055":0.667,"z056":0.667,"z057":0.667,"z058":0.667,"z059":0.667,"z061":1.499,"z063":1.499,"z065":1.499,"z066":0.667,"z067":0.667,"z068":1.499,"z069":0.667,"z070":0.667,"z071":0.667};
 /* 콜라주 배치: 사진 비율을 알고 있으므로 불러오기 전에도 열 높이를 계산할 수 있음 */
@@ -788,9 +808,9 @@ var TX={
  heroA:{g:'hero',v:'a',l:'시안 A · 첫 화면 큰 제목',d:'집을, 레지던스로.'},
  introA1:{g:'hero',v:'a',l:'시안 A · 소개 큰 문장',d:'구조와 동선을 먼저 설계하고,\n마감은 그 다음에 고릅니다.',at:'#about'},
  introA2:{g:'hero',v:'a',l:'시안 A · 소개 작은 문장',d:'전국의 아파트를\n오래 살아도 편안한 집으로 다시 짓습니다.',at:'#about'},
- heroB:{g:'hero',v:'b',l:'시안 B · 첫 화면 큰 제목',d:'빛이 켜지는 순간,\n집이 완성됩니다.'},
- introB:{g:'hero',v:'b',l:'시안 B · 소개 문장',d:'구조와 동선을 먼저 설계하고, 빛으로 마무리합니다.',at:'#about'},
- ctaB:{g:'hero',v:'b',l:'시안 B · 아래쪽 상담 문장',d:'우리 집의 밤을 상상해 보세요.'},
+ heroB:{g:'hero',v:'b',l:'첫 화면 큰 제목',d:'빛이 켜지는 순간,\n집이 완성됩니다.'},
+ introB:{g:'hero',v:'b',l:'소개 문장',d:'구조와 동선을 먼저 설계하고, 빛으로 마무리합니다.',at:'#about'},
+ ctaB:{g:'hero',v:'b',l:'아래쪽 상담 문장',d:'우리 집의 밤을 상상해 보세요.'},
  sideC:{g:'hero',v:'c',l:'시안 C · 왼쪽 소개 문장',d:'구조와 동선을 먼저 설계하는\n전국의 아파트 인테리어'},
  heroD1:{g:'hero',v:'d',l:'시안 D · 영상 위 큰 제목',d:'Live in the Light',one:1},
  heroD2:{g:'hero',v:'d',l:'시안 D · 영상 위 작은 문장',d:'오래 살아도 편안한 집, 린앤제이',one:1},
@@ -871,9 +891,10 @@ function render(){
   clearInterval(timer);
   var h=(location.hash||'').replace('#','');
   var parts=h.split('-'),v=parts[0],pg=parts[1]||'home',app=document.getElementById('app'),html;
-  if(v==='b'||v==='bw')BV=v;
+  /* 홈페이지는 시안 B-White 하나로 확정. 예전 시안 주소(#a, #b-works 등)와 #works 같은 주소도 모두 여기로 */
+  if(h!=='notify'&&v!=='bw'){if(!/^[abcd]$/.test(v))pg=v||'home';v='bw';}
+  BV='bw';
   if(h==='notify'){html=notifyPage();document.title='Linn & J — 상담 알림 예시';}
-  else if(!V[v]){html=landing();document.title='Linn & J 홈페이지 시안';}
   else{
     var M=V[v];
     if(pg==='works')html=M.works(bandState[v]);
@@ -881,8 +902,8 @@ function render(){
     else if(M[pg]&&pg!=='home'&&pg!=='project')html=M[pg]();
     else if(P[pg])html=M.project(P[pg]);
     else html=M.home();
-    html+='<a class="back" href="#home">← 시안 목록</a>'+(PREVIEW?'':'<a class="adm" href="admin.html" aria-label="관리자 페이지">admin</a>');
-    document.title='Linn & J — 시안 '+({b:'B-Black',bw:'B-White'}[v]||v.toUpperCase());
+    html+=(PREVIEW?'':'<a class="adm" href="admin.html" aria-label="관리자 페이지">admin</a>');
+    document.title='Linn & J 린앤제이 인테리어'+(pg==='home'?'':' — '+({works:'WORKS',contact:'CONTACT',about:'ABOUT',youtube:'YOUTUBE',blog:'BLOG'}[pg]||(P[pg]?P[pg].n:'')));
   }
   app.innerHTML=html;
   setHH();
@@ -899,6 +920,27 @@ function render(){
     kb(0);
     timer=setInterval(function(){go((i+1)%sl.length);},3000);
   }
+  if(pg==='home'){(function(){
+    var hs=document.getElementById('hs');if(!hs)return;
+    var tr=hs.querySelector('.hs-track'),sl=hs.querySelectorAll('.hs-slide'),ds=hs.querySelectorAll('.hs-dots button'),i=0,hold=false;
+    function load(n){var e=sl[n%sl.length];if(e)e.querySelectorAll('img[loading]').forEach(function(im){im.loading='eager';});}
+    function go(n){n=(n+sl.length)%sl.length;load(n);load(n+1);
+      var old=sl[i];if(old){var l=old.querySelector('.lt');if(l&&!l.classList.contains('pin'))l.classList.remove('on');}
+      i=n;tr.style.transform='translateX(-'+(i*100)+'%)';
+      sl.forEach(function(s,j){if(j===i)s.removeAttribute('aria-hidden');else s.setAttribute('aria-hidden','true');});
+      ds.forEach(function(d,j){if(j===i)d.setAttribute('aria-current','true');else d.removeAttribute('aria-current');});}
+    function play(){clearInterval(timer);timer=setInterval(function(){if(!hold&&!document.hidden)go(i+1);},5000);}
+    ds.forEach(function(d){d.addEventListener('click',function(e){e.stopPropagation();go(+d.getAttribute('data-i'));play();});});
+    /* 마우스를 사진 위에 올려 조명을 보는 동안에는 넘기지 않음 */
+    hs.addEventListener('pointerenter',function(e){if(e.pointerType==='mouse')hold=true;});
+    hs.addEventListener('pointerleave',function(e){if(e.pointerType==='mouse'){hold=false;play();}});
+    /* 휴대폰: 옆으로 밀면 다음/이전 사진 */
+    var sx=0,sy=0,st=0;
+    hs.addEventListener('touchstart',function(e){var t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();hold=true;},{passive:true});
+    hs.addEventListener('touchend',function(e){hold=false;var t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+      if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3&&Date.now()-st<700){go(i+(dx<0?1:-1));play();}},{passive:true});
+    load(1);play();
+  })();}
   if(V[v]&&pg==='home'&&v==='d'){
     var bh=app.querySelectorAll('.bh img'),bi=0,bc=0;
     timer=setInterval(function(){
