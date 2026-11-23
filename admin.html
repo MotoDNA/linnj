@@ -81,6 +81,20 @@ input:focus,textarea:focus,select:focus{outline:2px solid #C9AE84;outline-offset
 .wk .ctl{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .cover{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
 .cover img{width:220px;max-width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:8px;background:#E2DDD5}
+.hsl{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.hsr{display:flex;align-items:center;gap:10px;border:1px solid #E7E2DA;border-radius:8px;padding:8px;background:#FBFAF8}
+.hsr .no{flex:none;width:26px;height:26px;border-radius:50%;background:#1C1A18;color:#FFF;font-size:12px;display:flex;align-items:center;justify-content:center}
+.hsr .ctl{flex:none;display:flex;gap:4px;margin-left:auto}
+.hsp{display:flex;gap:6px;flex:1 1 auto;min-width:0}
+.hsp figure{margin:0;flex:1 1 0;min-width:0;max-width:150px}
+.hsp img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:4px;background:#EEE9E1}
+.hsp figcaption{font-size:11px;color:#8A8278;margin-top:2px}
+.hsg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.hsa{display:block;text-align:left;border:1px solid #E7E2DA;border-radius:8px;background:#FBFAF8;padding:8px;cursor:pointer;font:inherit}
+.hsa:hover{border-color:#1C1A18}.hsa span{display:block;margin-top:6px;font-size:13px}
+.hsn{flex:0 0 180px;width:180px;display:flex;flex-direction:column;align-items:flex-start}.hsn .box{aspect-ratio:3/2;border:1px dashed #CFC7BB;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;color:#8A8278;font-size:13px;background:#FBFAF8}
+.hsn .box img{width:100%;height:100%;object-fit:cover}
+@media (max-width:560px){.hsr{flex-wrap:wrap}.hsr .ctl{margin-left:36px}}
 .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
 .gal .g{position:relative;border:1px solid #E7E2DA;border-radius:8px;overflow:hidden;background:#FBFAF8}
 .gal .g img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
@@ -243,6 +257,7 @@ var BANDS=[['30','30평대'],['40','40평대'],['50','50평대'],['60','60평 �
 var MENU=[
   ['home','한눈에 보기','현재 상태와 저장 기록'],
   ['cap','홈페이지 메뉴'],
+  ['hero','메인 슬라이드','첫 화면 조명 사진(꺼짐·켜짐)의 장수와 순서'],
   ['about','ABOUT','회사 소개 · 대표 디자이너 · 진행 절차'],
   ['works','WORKS','포트폴리오 현장 목록과 사진'],
   ['contact','CONTACT','연락처 · 상담 안내 · 상담 접수함'],
@@ -381,10 +396,10 @@ var V={};
 V.home=function(b){
   var inbox=inb(),nd=inbox.filter(function(x){return !x.done;}).length,hist=PRACTICE?(lsGet(HIST)||[]):HISTS.map(function(h){return {at:h.time,note:h.note};});
   b.innerHTML='<div class="stats"><div class="stat"><b>'+works().length+'</b><span>포트폴리오 현장</span></div><div class="stat"><b>'+nd+'</b><span>처리 안 한 상담 신청</span></div><div class="stat"><b>'+Object.keys(SAVED.tx||{}).length+'</b><span>바꾼 문구</span></div><div class="stat"><b>'+hist.length+'</b><span>저장 기록</span></div></div>'+
-  '<div class="card" style="margin-top:16px"><h3>자주 하는 일</h3><div class="row" style="margin-top:10px"><a class="btn" href="#works">새 현장 올리기</a><a class="btn" href="#contact">상담 신청 확인</a><a class="btn" href="#about">회사 소개 고치기</a></div></div>'+
+  '<div class="card" style="margin-top:16px"><h3>자주 하는 일</h3><div class="row" style="margin-top:10px"><a class="btn" href="#hero">메인 슬라이드 바꾸기</a><a class="btn" href="#works">새 현장 올리기</a><a class="btn" href="#contact">상담 신청 확인</a><a class="btn" href="#about">회사 소개 고치기</a></div></div>'+
   '<div class="card"><h3>저장 기록</h3><p class="hint">저장할 때마다 바로 전 상태를 남겨 둡니다. 잘못 고쳤다면 원하는 때로 되돌릴 수 있어요.</p>'+
   (hist.length?hist.map(function(h,i){return '<div class="hist"><span>'+new Date(h.at).toLocaleString('ko-KR')+' 저장 바로 전</span><button class="btn sm" type="button" data-rs="'+i+'">이 때로 되돌리기</button></div>';}).join(''):'<div class="empty">아직 저장 기록이 없어요.</div>')+'</div>'+
-  '<div class="card"><h3>여기서 고칠 수 없는 것</h3><p class="hint" style="margin:0">색·글꼴·배치, 메뉴 구성, 조명 켜짐/꺼짐 사진 짝, 공사 전후 비교 사진, 첫 화면 영상은 제작사(디엔에이랩스)에 수정 요청해 주세요.</p></div>';
+  '<div class="card"><h3>여기서 고칠 수 없는 것</h3><p class="hint" style="margin:0">색·글꼴·배치, 메뉴 구성, 현장 상세의 조명 켜짐/꺼짐 사진 짝, 공사 전후 비교 사진, 첫 화면 영상은 제작사(디엔에이랩스)에 수정 요청해 주세요.</p></div>';
   b.querySelectorAll('[data-rs]').forEach(function(x){x.addEventListener('click',function(){
     if(!confirm('이 때의 내용으로 되돌리고 저장할까요? 지금 내용은 저장 기록에 남습니다.'))return;
     if(!PRACTICE){api({action:'restore',time:hist[+x.dataset.rs].at}).then(function(j){if(!j.ok){showErr([j.error||'되돌리지 못했어요.']);return;}
@@ -393,6 +408,44 @@ V.home=function(b){
     DRAFT=clone(h);DRAFT.up=up;DRAFT.dim=dim;save();preview(true);draw();
   });});
   where('','');
+};
+
+/* ---------- 메인 슬라이드: 조명 꺼짐/켜짐 사진 쌍의 장수와 순서 ---------- */
+var HS_MAX=12;
+function hsCur(){return DRAFT.hs||DEF.hs;}
+function hsOwn(){if(!DRAFT.hs)DRAFT.hs=clone(DEF.hs);return DRAFT.hs;}
+function hsThumb(k){return (DRAFT.up&&DRAFT.up[k])||(SAVED.up&&SAVED.up[k])||('img/'+k+'-m.jpg');}
+function hsHas(L,p){return L.some(function(x){return x[0]===p[0]&&x[1]===p[1];});}
+V.hero=function(b){
+  var NEW=[null,null];
+  function pairImg(p){return '<div class="hsp"><figure><img src="'+esc(hsThumb(p[0]))+'" alt="" loading="lazy"><figcaption>조명 꺼짐</figcaption></figure><figure><img src="'+esc(hsThumb(p[1]))+'" alt="" loading="lazy"><figcaption>조명 켜짐</figcaption></figure></div>';}
+  function draw2(){
+    var L=hsCur(),lib=DEF.hsLib.filter(function(p){return !hsHas(L,p);});
+    b.innerHTML=chips([['첫 화면 슬라이드','','#hs']])+
+    '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>지금 나오는 사진 ('+L.length+'장)</h3><p class="hint" style="margin:0">1번부터 순서대로 5초마다 넘어갑니다. 왼쪽이 조명 꺼진 사진, 오른쪽이 켜진 사진이에요. 홈페이지에서는 사진 왼쪽에 마우스를 두면 꺼지고, 오른쪽에 두면 켜집니다.</p></div>'+(DRAFT.hs?'<button class="btn link" type="button" id="hsDef">처음 내용으로</button>':'')+'</div>'+
+    '<div class="hsl">'+L.map(function(p,i){return '<div class="hsr"><span class="no">'+(i+1)+'</span>'+pairImg(p)+
+      '<div class="ctl"><button class="btn sm" type="button" data-mv="-1" data-i="'+i+'" aria-label="'+(i+1)+'번 위로" '+(i?'':'disabled')+'>▲</button><button class="btn sm" type="button" data-mv="1" data-i="'+i+'" aria-label="'+(i+1)+'번 아래로" '+(i<L.length-1?'':'disabled')+'>▼</button><button class="btn sm del" type="button" data-rm="'+i+'" '+(L.length>1?'':'disabled title="사진이 1장은 있어야 해요"')+'>빼기</button></div></div>';}).join('')+'</div>'+
+    '<p class="hint" style="margin:12px 0 0">사진이 많을수록 한 바퀴 도는 시간이 길어집니다. 6~8장을 권해요. (최대 '+HS_MAX+'장)</p></div>'+
+    '<div class="card"><h3>준비된 사진에서 넣기 ('+lib.length+'쌍)</h3><p class="hint">제작사가 짝을 맞춰 둔 사진입니다. 누르면 맨 뒤에 들어가요.</p>'+
+    (lib.length?'<div class="hsg">'+lib.map(function(p,i){return '<button type="button" class="hsa" data-lib="'+DEF.hsLib.indexOf(p)+'" aria-label="이 사진 쌍 넣기">'+pairImg(p)+'<span>+ 넣기</span></button>';}).join('')+'</div>':'<div class="empty">준비된 사진을 모두 쓰고 있어요.</div>')+'</div>'+
+    '<div class="card"><h3>새 사진 쌍 올리기</h3><p class="hint">같은 자리에서 같은 구도로 찍은 사진 두 장(조명 끈 사진, 켠 사진)을 올려 주세요. 구도가 다르면 마우스를 움직일 때 사진이 어긋나 보여요. 가로 사진(3:2)이 가장 잘 맞습니다.</p>'+
+    '<div class="row" style="gap:16px;align-items:flex-start">'+[0,1].map(function(j){return '<div class="hsn"><div class="box">'+(NEW[j]?'<img src="'+esc(hsThumb(NEW[j]))+'" alt="">':'<span>'+(j?'조명 켜짐':'조명 꺼짐')+'</span>')+'</div><label class="btn sm" for="hsF'+j+'">'+(NEW[j]?'다시 고르기':(j?'켜진 사진 고르기':'꺼진 사진 고르기'))+'</label><input class="sr" type="file" id="hsF'+j+'" accept="image/*"></div>';}).join('')+
+    '</div><div class="row" style="margin-top:12px"><button class="btn" type="button" id="hsAdd" '+(NEW[0]&&NEW[1]?'':'disabled')+'>이 사진 쌍 넣기</button></div></div>';
+    wireChips(b);
+    var box=b.querySelector('.hsl');
+    box.addEventListener('click',function(e){var x=e.target.closest('button');if(!x||x.disabled)return;var L=hsOwn(),i=+x.dataset.i;
+      if(x.dataset.mv){var j=i+(+x.dataset.mv);var t=L[i];L[i]=L[j];L[j]=t;}
+      else if(x.dataset.rm!=null){if(L.length<2)return;if(!confirm((+x.dataset.rm+1)+'번 사진을 슬라이드에서 뺄까요? 아래 "준비된 사진"이나 저장 기록에서 다시 넣을 수 있어요.'))return;L.splice(+x.dataset.rm,1);}
+      changed();draw2();where('','#hs');});
+    b.querySelectorAll('[data-lib]').forEach(function(x){x.addEventListener('click',function(){var L=hsOwn();if(L.length>=HS_MAX){toast('최대 '+HS_MAX+'장까지 넣을 수 있어요.');return;}L.push(clone(DEF.hsLib[+x.dataset.lib]));changed();draw2();toast((L.length)+'번째로 넣었어요.');where('','#hs');});});
+    var d=b.querySelector('#hsDef');if(d)d.addEventListener('click',function(){if(!confirm('메인 슬라이드를 처음 내용(1~6번)으로 되돌릴까요?'))return;delete DRAFT.hs;changed();draw2();where('','#hs');});
+    [0,1].forEach(function(j){b.querySelector('#hsF'+j).addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;readPhoto(f,function(k){NEW[j]=k;draw2();});});});
+    b.querySelector('#hsAdd').addEventListener('click',function(){if(!NEW[0]||!NEW[1])return;var L=hsOwn();if(L.length>=HS_MAX){toast('최대 '+HS_MAX+'장까지 넣을 수 있어요.');return;}
+      var dm=Object.assign({},SAVED.dim||{},DRAFT.dim||{}),r0=dm[NEW[0]],r1=dm[NEW[1]];
+      if(r0&&r1&&Math.abs(r0-r1)/r0>.03&&!confirm('두 사진의 가로세로 비율이 달라요. 같은 구도로 찍은 사진이 아니면 어긋나 보일 수 있어요. 그래도 넣을까요?'))return;
+      L.push([NEW[0],NEW[1]]);NEW=[null,null];changed();draw2();toast(L.length+'번째로 넣었어요. 저장하기를 누르면 홈페이지에 나타납니다.');where('','#hs');});
+  }
+  draw2();where('','#hs');
 };
 
 V.about=function(b){

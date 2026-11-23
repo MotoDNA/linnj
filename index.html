@@ -259,6 +259,7 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
 .hs-dots{position:absolute;left:0;right:0;bottom:20px;z-index:5;display:flex;justify-content:center;gap:0}
 /* 휴대폰·태블릿 가로 화면(높이가 낮을 때): 사진을 화면 높이에 맞추고 제목을 줄여 첫 화면 안에 모두 보이게 */
 @media (min-width:601px) and (max-height:540px){.B .hero{min-height:0;height:100vh}.B .hero h1{font-size:clamp(22px,4vw,34px)}.B .hero .txt{bottom:46px}.hs-dots{bottom:2px}.B .hero .lt .bulb{bottom:58px}}
+.hs-dots[hidden]{display:none}
 .hs-dots button{width:24px;height:44px;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center}
 .hs-dots button::before{content:"";width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);box-sizing:border-box;transition:background .3s,border-color .3s}
 .hs-dots button[aria-current="true"]::before{background:rgba(255,255,255,.6);border-color:rgba(255,255,255,.6)}
@@ -603,13 +604,17 @@ var BZ={'014':[24,64],'022':[28,72],'024':[33,66],'028':[30,54],'030':[30,72],'0
 BL.forEach(function(k){ZN['h'+k]=BZ[k];});
 /* 첫 화면 슬라이드: 12쌍(조명 꺼짐/켜짐) 중 HS 에 적힌 번호를 5초마다 넘김 */
 var HS=['01','02','03','04','05','06'];
+/* 관리자에서 고를 수 있는 기본 조명 사진 12쌍 [꺼짐, 켜짐] */
+var HSLIB=['01','02','03','04','05','06','07','08','09','10','11','12'].map(function(k){return ['m'+k,'m'+k+'n'];});
+function hsList(){var L=(CT.hs&&CT.hs.length)?CT.hs:HS.map(function(k){return ['m'+k,'m'+k+'n'];});return L.filter(function(p){return p&&p[0]&&p[1];});}
 function hsImg(t,x,eager){return t.replace('src="img/'+x+'.jpg"','src="img/'+x+'-m.jpg" srcset="img/'+x+'-m.jpg 1280w, img/'+x+'.jpg 2400w" sizes="100vw"');}
 function blhero(){
   var h='<div class="hs" id="hs" aria-roledescription="carousel" aria-label="시공 현장 사진"><div class="hs-track">';
-  HS.forEach(function(k,i){var o='m'+k,t=light([o,o+'n'],'r32','린앤제이 시공 현장 '+(i+1),false).replace('<div class="lt ','<div class="lt lh ');
-    t=hsImg(hsImg(t,o),o+'n');if(i===0)t=t.replace(/ loading="lazy"/g,'');
-    h+='<div class="hs-slide" role="group" aria-roledescription="slide" aria-label="'+(i+1)+' / '+HS.length+'"'+(i?' aria-hidden="true"':'')+'>'+t+'</div>';});
-  h+='</div><div class="hs-dots">'+HS.map(function(k,i){return '<button type="button" data-i="'+i+'" aria-label="'+(i+1)+'번 사진 보기"'+(i?'':' aria-current="true"')+'></button>';}).join('')+'</div></div>';
+  var HL=hsList();
+  HL.forEach(function(p,i){var t=light(p,'r32','린앤제이 시공 현장 '+(i+1),false).replace('<div class="lt ','<div class="lt lh ');
+    t=hsImg(hsImg(t,p[0]),p[1]);if(i===0)t=t.replace(/ loading="lazy"/g,'');
+    h+='<div class="hs-slide" role="group" aria-roledescription="slide" aria-label="'+(i+1)+' / '+HL.length+'"'+(i?' aria-hidden="true"':'')+'>'+t+'</div>';});
+  h+='</div><div class="hs-dots"'+(HL.length<2?' hidden':'')+'>'+HL.map(function(k,i){return '<button type="button" data-i="'+i+'" aria-label="'+(i+1)+'번 사진 보기"'+(i?'':' aria-current="true"')+'></button>';}).join('')+'</div></div>';
   return h;}
 function foot(){return '<footer class="wrap"><div style="margin-bottom:6px">'+LJ(39)+'</div><div class="biz"><span>상호 린하우징&amp;제이 (린앤제이 인테리어 스튜디오)</span><span>대표 '+tx('ceo')+'</span><span>사업자등록번호 '+tx('biz')+'</span></div><div class="biz"><span>'+tx('addr')+'</span><span>T. <a href="tel:'+tx('phone').replace(/[^0-9]/g,'')+'">'+tx('phone')+'</a></span>'+(hasTx('email')?'<span>E. '+tx('email')+'</span>':'')+'</div><div class="biz" style="opacity:.75"><span>© '+new Date().getFullYear()+' Linn &amp; J Design Studio. All rights reserved.</span></div><div style="margin-top:8px">'+ext(YT,'YOUTUBE')+' &nbsp; '+ext(BLOG,'BLOG')+'</div></footer>';}
 var DIM={"c001":0.667,"c003":0.667,"c006":0.667,"c007":0.667,"c008":0.667,"c009":0.667,"c010":1.499,"c011":1.499,"c012":0.667,"c013":0.667,"c014":0.667,"c015":0.667,"c016":0.667,"c017":0.667,"c018":0.667,"c019":0.667,"c020":0.667,"c021":0.667,"c022":0.667,"c023":0.667,"c024":0.667,"c025":1.499,"c026":1.499,"c027":1.499,"c028":1.499,"c030":0.667,"c031":0.667,"c032":0.667,"c033":1.499,"c034":0.751,"c035":1.499,"c036":1.499,"c037":1.333,"c038":1.499,"c039":0.667,"c041":0.751,"c042":0.667,"c044":0.667,"c045":0.667,"c046":0.667,"c047":1.333,"c048":1.341,"c049":1.499,"c050":1.499,"c051":0.751,"c052":0.751,"g001":0.667,"g002":0.667,"g003":0.667,"g004":0.751,"g005":1.333,"g006":1.333,"g007":1.333,"g008":0.667,"g010":0.667,"g014":0.667,"g015":0.667,"g016":0.667,"g017":0.667,"g018":1.499,"g019":1.499,"g020":0.667,"g021":0.667,"g022":0.667,"g024":0.667,"g025":0.667,"g026":0.667,"g027":0.667,"g028":0.667,"g029":0.667,"g030":0.667,"g031":0.667,"g032":0.667,"g033":0.667,"g034":0.667,"g035":0.667,"g036":0.667,"g037":0.667,"g038":0.667,"g039":0.667,"g040":0.667,"g041":1.499,"g042":0.667,"g043":1.499,"g045":1.5,"g046":1.5,"g047":1.5,"g048":1.5,"g049":1.5,"g050":1.5,"g051":1.5,"g052":1.5,"g053":1.5,"g054":1.5,"g055":1.5,"g056":1.5,"g057":1.5,"g058":1.5,"g059":1.5,"g060":1.5,"g061":1.5,"g062":1.5,"g063":1.5,"g064":1.498,"g065":1.5,"g066":1.498,"m221":0.667,"m223":0.667,"m225":0.667,"m227":0.667,"m229":0.667,"m235":1.499,"m237":0.667,"m239":0.667,"m243":1.499,"m247":0.667,"m249":0.667,"m251":1.499,"m253":1.499,"m255":0.667,"m257":0.667,"m259":0.667,"m261":0.667,"m265":1.499,"m271":0.667,"m273":0.667,"m283":1.499,"m285":1.499,"m289":0.667,"m297":1.499,"m305":1.499,"m93":0.667,"m94":0.75,"u194":0.667,"u200":0.667,"u218":0.667,"u224":0.667,"u232":0.667,"u238":0.667,"u248":0.667,"u254":0.667,"u268":0.667,"u272":0.667,"u278":0.667,"u292":1.499,"u298":0.667,"u306":1.499,"u318":1.5,"u324":0.667,"w183":0.751,"w189":0.667,"w191":0.667,"w193":0.667,"w195":0.667,"w201":0.667,"w205":0.667,"w207":0.667,"w211":0.667,"w213":0.667,"w225":0.667,"w229":0.667,"w231":0.667,"w235":0.751,"w239":1.499,"w241":1.499,"w243":1.499,"w255":0.667,"w257":0.667,"w259":0.667,"w261":0.667,"w269":1.499,"w271":1.499,"w279":1.499,"w287":1.499,"w289":1.499,"z003":0.751,"z004":0.667,"z005":0.667,"z006":0.667,"z007":0.667,"z008":0.667,"z009":0.667,"z010":0.667,"z011":0.667,"z012":0.667,"z013":0.667,"z014":0.667,"z015":0.667,"z016":0.667,"z017":0.667,"z018":0.667,"z019":0.667,"z022":0.667,"z023":0.667,"z024":0.667,"z025":0.667,"z026":0.667,"z027":0.667,"z028":1.266,"z029":1.499,"z031":1.499,"z032":1.499,"z034":1.499,"z039":1.254,"z040":1.241,"z041":0.667,"z043":1.499,"z044":0.667,"z045":0.667,"z046":1.499,"z047":1.499,"z050":0.667,"z051":1.499,"z054":1.499,"z055":0.667,"z056":0.667,"z057":0.667,"z058":0.667,"z059":0.667,"z061":1.499,"z063":1.499,"z065":1.499,"z066":0.667,"z067":0.667,"z068":1.499,"z069":0.667,"z070":0.667,"z071":0.667};
@@ -838,7 +843,7 @@ function snapDefaults(){
   ORDER.forEach(function(id){DEF.row[id]=P[id].row;});
 }
 function ljDefaults(){snapDefaults();var t={};for(var k in TX)t[k]={g:TX[k].g,v:TX[k].v||'',l:TX[k].l,d:TX[k].d,big:!!TX[k].big,one:!!TX[k].one,at:TX[k].at||'',page:TX[k].page||''};
-  return JSON.parse(JSON.stringify({tx:t,order:DEF.order,works:DEF.order.map(function(id){return DEF.works[id];}),proc:DEF.proc,facts:DEF.facts,yt:DEF.yt,blog:DEF.blog}));}
+  return JSON.parse(JSON.stringify({tx:t,order:DEF.order,works:DEF.order.map(function(id){return DEF.works[id];}),proc:DEF.proc,facts:DEF.facts,yt:DEF.yt,blog:DEF.blog,hs:HS.map(function(k){return ['m'+k,'m'+k+'n'];}),hsLib:HSLIB}));}
 var _IMG=IMG;
 IMG=function(k){return (CT.up&&CT.up[k])||_IMG(k);};
 function applyContent(c){
