@@ -114,6 +114,8 @@ input:focus,textarea:focus,select:focus{outline:2px solid #C9AE84;outline-offset
 body.dragging,body.dragging *{cursor:grabbing!important;user-select:none}
 .pe1 .grip{position:absolute;left:4px;bottom:2px;z-index:1;width:28px;height:30px}
 .hsr .note{display:block;font-size:11px;color:#8A6D3B;margin-top:4px}
+.peln{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:#6B6358;white-space:nowrap}
+.peln select{height:34px;min-width:0;flex:1 1 auto;max-width:260px;padding:0 8px;border:1px solid #D9D2C7;border-radius:6px;font:inherit;font-size:13px;color:#1C1A18;background:#FFF}
 .pelb{margin-top:6px;width:100%;max-width:306px;height:34px;padding:0 10px;border:1px solid #D9D2C7;border-radius:6px;font:inherit;font-size:13px}
 .hsg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
 .hsa{border:1px solid #E7E2DA;border-radius:8px;background:#FBFAF8;padding:8px}
@@ -292,7 +294,8 @@ var MENU=[
   ['home','한눈에 보기','현재 상태와 저장 기록'],
   ['cap','홈페이지 메뉴'],
   ['hero','메인 슬라이드','첫 화면 조명 사진(꺼짐·켜짐)의 장수와 순서'],
-  ['about','ABOUT','메인(ABOUT) 페이지 사진 · 회사 소개 · 진행 절차'],
+  ['homephotos','메인 사진','ABOUT 페이지의 Works 사진 · Before / After · 조명 사진'],
+  ['about','ABOUT','회사 소개 · 대표 디자이너 · 진행 절차'],
   ['works','WORKS','포트폴리오 현장 목록과 사진'],
   ['contact','CONTACT','연락처 · 상담 안내 · 상담 접수함'],
   ['youtube','YOUTUBE','유튜브 채널 주소'],
@@ -519,9 +522,11 @@ function peFig(c,k,i,j,name,label){
   if(!k)return '<figure class="hsf vac"><button type="button" class="hsup" data-a="ed" data-i="'+i+'" data-j="'+j+'">+ 사진 올리기</button>'+(label?'<figcaption>'+name+'</figcaption>':'')+'</figure>';
   return '<figure class="hsf"><img src="'+esc(img(k))+'" alt="'+tag+' 사진" loading="lazy"><div class="hsact"><button type="button" data-a="ed" data-i="'+i+'" data-j="'+j+'" title="사진 바꾸기" aria-label="'+tag+' 사진 바꾸기">'+PE_PEN+'</button><button type="button" class="del" data-a="'+(c.kind==='one'||(c.kind==='mix'&&j<0)?'rm':'clr')+'" data-i="'+i+'" data-j="'+j+'" title="삭제" aria-label="'+tag+' 사진 삭제">'+PE_BIN+'</button></div>'+(label?'<figcaption>'+name+'</figcaption>':'')+'</figure>';}
 function peHTML(c){PE[c.id]=c;var L=c.get()||[],nm=c.names||['조명 꺼짐','조명 켜짐'],h='';
-  var head='<div class="row" style="justify-content:space-between;align-items:flex-start"><div style="flex:1 1 260px"><h3>'+c.title+' ('+L.length+')</h3>'+(c.hint?'<p class="hint" style="margin:0">'+c.hint+'</p>':'')+'</div><div class="row" style="gap:6px">'+
-    (c.kind!=='pair'||!c.both?'<label class="btn sm" for="pf_'+c.id+'">+ 사진 추가</label><input class="sr" type="file" id="pf_'+c.id+'" data-a="addf" accept="image/*" multiple>':'')+
-    (c.kind!=='one'?'<button class="btn sm" type="button" data-a="addp">+ '+(c.pairName||'짝')+' 추가</button>':'')+'</div></div>';
+  var full=c.max&&L.length>=c.max;
+  var head='<div class="row" style="justify-content:space-between;align-items:flex-start"><div style="flex:1 1 260px"><h3>'+c.title+' ('+L.length+(c.max?' / 최대 '+c.max:'')+')</h3>'+(c.hint?'<p class="hint" style="margin:0">'+c.hint+'</p>':'')+'</div><div class="row" style="gap:6px">'+
+    (full?'<span class="hint" style="margin:0">최대 '+c.max+'장 — 더 넣으려면 먼저 지워 주세요</span>':'')+
+    (!full&&(c.kind!=='pair'||!c.both)?'<label class="btn sm" for="pf_'+c.id+'">+ 사진 추가</label><input class="sr" type="file" id="pf_'+c.id+'" data-a="addf" accept="image/*" multiple>':'')+
+    (!full&&c.kind!=='one'?'<button class="btn sm" type="button" data-a="addp">+ '+(c.pairName||'짝')+' 추가</button>':'')+'</div></div>';
   if(c.kind==='one'){
     h=L.length?'<div class="pe1">'+L.map(function(k,i){return '<div class="it"><span class="n">'+(i+1)+'</span>'+GRIP+peFig(c,k,i,-1,'사진')+'<div class="mv"><button type="button" data-a="mv" data-d="-1" data-i="'+i+'" aria-label="'+(i+1)+'번 앞으로" '+(i?'':'disabled')+'>◀</button><button type="button" data-a="mv" data-d="1" data-i="'+i+'" aria-label="'+(i+1)+'번 뒤로" '+(i<L.length-1?'':'disabled')+'>▶</button></div></div>';}).join('')+'</div>':'<div class="empty">사진이 없어요. 「+ 사진 추가」로 올려 주세요.'+(c.emptyNote||'')+'</div>';
   }else{
@@ -529,6 +534,7 @@ function peHTML(c){PE[c.id]=c;var L=c.get()||[],nm=c.names||['조명 꺼짐','�
       return '<div class="hsr'+(miss?' miss':'')+'">'+GRIP+'<span class="no">'+(i+1)+'</span><div style="flex:1 1 auto;min-width:0"><div class="hsp">'+
         (two?[0,1].map(function(j){return peFig(c,S[j],i,j,nm[j],true);}).join(''):peFig(c,S[0],i,-1,'사진',true))+'</div>'+
         (c.label&&two?'<input class="pelb" type="text" data-a="lb" data-i="'+i+'" value="'+esc(it[2]||'')+'" placeholder="'+(c.labelPh||'이름 (예: 거실)')+'" aria-label="'+(i+1)+'번 이름">':'')+
+        (c.link?peLinkSel(it[c.label?3:2]||'',i):'')+
         (miss?'<span class="warn">공사 전·후 사진 두 장이 모두 있어야 홈페이지에 나옵니다.</span>':(half?'<span class="note">한 장만 있어요. 조명 효과 없이 이 사진만 나옵니다.</span>':''))+'</div>'+
         '<div class="ctl"><button class="btn sm" type="button" data-a="mv" data-d="-1" data-i="'+i+'" aria-label="'+(i+1)+'번 위로" '+(i?'':'disabled')+'>▲</button><button class="btn sm" type="button" data-a="mv" data-d="1" data-i="'+i+'" aria-label="'+(i+1)+'번 아래로" '+(i<L.length-1?'':'disabled')+'>▼</button><button class="btn sm del" type="button" data-a="rm" data-i="'+i+'">삭제</button></div></div>';}).join('')+'</div>':'<div class="empty" style="margin-top:12px">사진이 없어요. 비워 두면 이 칸은 홈페이지에 나오지 않아요.</div>';
   }
@@ -542,13 +548,15 @@ function peWire(b,redraw){
       readPhoto(f,function(k){var L=c.own();if(!L[t[0]]&&L[t[0]]!=='')return;peSet(c,L,t[0],t[1],k);done((t[0]+1)+'번 사진을 바꿨어요. 저장하기를 눌러야 홈페이지에 반영됩니다.');});});
     var af=box.querySelector('[data-a="addf"]');
     if(af)af.addEventListener('change',function(e){var fs=[].slice.call(e.target.files),n=0,got=[];af.value='';if(!fs.length)return;toast('사진을 올리는 중이에요…');
-      fs.forEach(function(fl,ix){readPhoto(fl,function(k){got[ix]=k;if(++n===fs.length){var L=c.own();got.forEach(function(x){if(x)L.push(c.kind==='pair'?(c.label?[x,'','']:[x,'']):x);});if(c.onAdd)c.onAdd(got);done(n+'장을 추가했어요. 저장하기를 눌러야 홈페이지에 반영됩니다.');}});});});
+      if(c.max){var room=c.max-c.own().length;if(room<=0){toast('최대 '+c.max+'장까지 넣을 수 있어요. 먼저 사진을 지워 주세요.');return;}if(fs.length>room){fs=fs.slice(0,room);toast('최대 '+c.max+'장이라 '+room+'장만 추가해요.');}}
+      fs.forEach(function(fl,ix){readPhoto(fl,function(k){got[ix]=k;if(++n===fs.length){var L=c.own();got.forEach(function(x){if(x)if(!c.max||L.length<c.max)L.push(c.kind==='pair'?((c.label&&c.link)?[x,'','','']:(c.label||c.link)?[x,'','']:[x,'']):x);});if(c.onAdd)c.onAdd(got);done(n+'장을 추가했어요. 저장하기를 눌러야 홈페이지에 반영됩니다.');}});});});
     sortable(box.querySelector('.pe1')||box.querySelector('.hsl'),c.kind==='one'?'.it':'.hsr',function(f,t){moveItem(c.own(),f,t);done('순서를 바꿨어요. 저장하기를 눌러야 홈페이지에 반영됩니다.');});
+    box.addEventListener('change',function(e){var x=e.target;if(x.dataset.a!=='ln')return;var L=c.own(),i=+x.dataset.i,a=L[i].slice(),li=c.label?3:2;while(a.length<=li)a.push('');a[li]=x.value;L[i]=a;changed();if(c.where)where(c.where[0],c.where[1]);toast(x.value?'「'+x.options[x.selectedIndex].text+'」 현장과 연결했어요. 큰 사진의 Detail → 을 누르면 그 현장으로 가요.':'연결을 뺐어요. 큰 사진에 Detail → 이 나오지 않아요.');});
     box.addEventListener('input',function(e){var x=e.target;if(x.dataset.a!=='lb')return;var L=c.own(),i=+x.dataset.i,a=L[i].slice();a[2]=x.value;L[i]=a;changed();});
     box.addEventListener('focusin',function(e){if(e.target.dataset&&e.target.dataset.a==='lb'&&c.where)where(c.where[0],c.where[1]);});
     box.addEventListener('click',function(e){var x=e.target.closest('button');if(!x||x.disabled||!box.contains(x))return;var a=x.dataset.a,i=+x.dataset.i,j=+x.dataset.j;
       if(a==='ed'){T=[i,j];pick.click();return;}
-      if(a==='addp'){var L=c.own();L.push(c.kind==='mix'?{p:['','']}:(c.label?['','','']:['','']));done('빈 짝을 맨 아래에 만들었어요. 두 칸에 사진을 올려 주세요.');return;}
+      if(a==='addp'){var L=c.own();if(c.max&&L.length>=c.max){toast('최대 '+c.max+'장까지 넣을 수 있어요.');return;}L.push(c.kind==='mix'?{p:['','']}:((c.label&&c.link)?['','','','']:(c.label||c.link)?['','','']:['','']));done('빈 짝을 맨 아래에 만들었어요. 두 칸에 사진을 올려 주세요.');return;}
       if(a==='def'){if(!confirm('이 칸의 사진을 처음 상태로 되돌릴까요?'))return;c.reset();done();return;}
       var L2=c.own();
       if(a==='mv'){var k2=i+(+x.dataset.d);if(k2<0||k2>=L2.length)return;var t=L2[i];L2[i]=L2[k2];L2[k2]=t;done();return;}
@@ -557,6 +565,15 @@ function peWire(b,redraw){
     });
   });
 }
+function peLinkSel(v,i){var W=works(),has=!v||W.some(function(w){return w.id===v;});
+  return '<label class="peln">연결할 현장 <select data-a="ln" data-i="'+i+'" aria-label="'+(i+1)+'번 사진과 연결할 현장">'+
+    '<option value="">연결 안 함 (Detail 링크 없음)</option>'+W.map(function(w){return '<option value="'+esc(w.id)+'"'+(w.id===v?' selected':'')+'>'+esc(w.name||'(이름 없음)')+'</option>';}).join('')+
+    (has?'':'<option value="'+esc(v)+'" selected>(삭제된 현장)</option>')+'</select></label>';}
+/* 메인 Works 칸 목록: 저장된 칸 목록이 있으면 그것, 없으면 예전 방식(현장마다 한 칸 + 바꾼 사진 + 숨김)에서 만든다 */
+function homeTilesGet(){if(DRAFT.home&&Array.isArray(DRAFT.home.tiles))return DRAFT.home.tiles;
+  var hide=(DRAFT.home&&DRAFT.home.hide)||[];
+  return works().filter(function(w){return hide.indexOf(w.id)<0;}).map(function(w){var r=homeRowGet(w);return [r[0]||'',r[1]||'',w.id];});}
+function homeTilesOwn(){DRAFT.home=DRAFT.home||{};if(!Array.isArray(DRAFT.home.tiles))DRAFT.home.tiles=clone(homeTilesGet());return DRAFT.home.tiles;}
 /* 메인(ABOUT) 페이지 사진 */
 function homeGet(k){return (DRAFT.home&&Array.isArray(DRAFT.home[k]))?DRAFT.home[k]:((DEF.home&&DEF.home[k])||[]);}
 function homeOwn(k){DRAFT.home=DRAFT.home||{};if(!Array.isArray(DRAFT.home[k]))DRAFT.home[k]=clone((DEF.home&&DEF.home[k])||[]);return DRAFT.home[k];}
@@ -654,20 +671,32 @@ V.hero=function(b){
   draw2();where('','#hs');
 };
 
-V.about=function(b){
+V.homephotos=function(b){
   function draw2(){
-    var cBa={id:'homeBa',kind:'pair',both:true,title:'Before / After',names:['공사 전','공사 후'],label:true,pairName:'전·후 짝',labelPh:'이름 (예: 거실)',hint:'Works 칸 아래의 공사 전·후 비교 사진입니다. 같은 자리에서 찍은 두 장을 올려 주세요. 여러 짝이면 위아래로 나옵니다.',
+    var cTiles={id:'homeTiles',kind:'pair',link:true,max:9,title:'Works 칸 사진',names:['조명 꺼짐','조명 켜짐'],pairName:'조명 짝',
+      hint:'ABOUT 페이지 Works 칸에 3장씩(휴대폰 1장씩) 나오는 사진입니다. 최대 9장까지 추가할 수 있고, 넣은 만큼 모두 메인 화면에 나와요. 줄마다 「연결할 현장」을 고르면 큰 사진의 Detail → 이 그 현장 페이지로 연결돼요. 조명 꺼짐·켜짐 중 한 장만 있어도 됩니다.',
+      get:homeTilesGet,own:homeTilesOwn,def:function(){return DEF.home.tiles;},reset:function(){if(DRAFT.home){delete DRAFT.home.tiles;delete DRAFT.home.rows;delete DRAFT.home.hide;}},where:['','#hwk']};
+    var cBa={id:'homeBa',kind:'pair',both:true,title:'Before / After',names:['공사 전','공사 후'],label:true,pairName:'전·후 짝',labelPh:'이름 (예: 거실)',
+      hint:'Works 칸 아래의 공사 전·후 비교 사진입니다. 사진에 마우스를 올려 연필(바꾸기)을 누르세요. 같은 자리에서 찍은 두 장이어야 자연스럽고, 원본 사진을 올리면 화면 크기에 맞춰 크게 나와요. 여러 짝이면 위아래로 나옵니다.',
       get:function(){return homeGet('ba');},own:function(){return homeOwn('ba');},def:function(){return DEF.home.ba;},reset:function(){if(DRAFT.home)delete DRAFT.home.ba;},where:['','#hba']};
-    var cLt={id:'homeLt',kind:'pair',title:'조명 사진 (Before / After 아래)',names:['조명 꺼짐','조명 켜짐'],label:true,pairName:'조명 짝',labelPh:'설명 (예: 거실)',hint:'두 장씩 나란히 나오는 조명 사진입니다. 같은 자리에서 조명을 끄고, 켜고 찍은 두 장을 올려 주세요. 한 장만 있어도 됩니다(조명 효과 없이 그 사진만 나와요).',
+    var cLt={id:'homeLt',kind:'pair',label:true,link:true,title:'조명 사진 (Before / After 아래)',names:['조명 꺼짐','조명 켜짐'],pairName:'조명 짝',labelPh:'설명 (예: 거실)',
+      hint:'Before / After 아래 Works 칸처럼 한 줄에 3장씩(휴대폰 1장씩) 정사각형으로 나오는 사진입니다. 누르면 크게 보이고, 「연결할 현장」을 고르면 오른쪽 아래 Detail → 로 그 현장 페이지에 갑니다. 꺼짐·켜짐 중 한 장만 있어도 돼요.',
       get:function(){return homeGet('light');},own:function(){return homeOwn('light');},def:function(){return DEF.home.light;},reset:function(){if(DRAFT.home)delete DRAFT.home.light;},where:['','#hlt']};
-    b.innerHTML=chips([['Works 칸','','#hwk'],['Before / After','','#hba'],['조명 사진','','#hlt'],['About 구역','','#designer'],['Process 구역','','#process']])+
-    homeRowsHTML()+peHTML(cBa)+peHTML(cLt)+
-    '<div class="card"><h3>회사 소개</h3><p class="hint">엔터를 누르면 홈페이지에서도 줄이 바뀝니다. 칸을 비우면 처음 문구로 돌아가요.</p>'+txField('aboutLead')+txField('aboutBody')+txField('designer')+'</div>'+
-    '<div class="card"><h3>회사 정보 칸</h3><p class="hint">About 아래 네 칸(경력, 시공 지역, A/S, 고객 평가)입니다.</p>'+pairList('facts',['항목','내용'])+'</div>'+
-    '<div class="card"><h3>진행 절차 (Process)</h3><p class="hint">순서대로 01, 02… 번호가 붙습니다.</p>'+pairList('proc',['단계 이름','설명'],true)+'</div>';
-    wireTx(b);wireChips(b);wirePairs(b,'facts','','#designer',draw2);wirePairs(b,'proc','','#process',draw2);homeRowsWire(b,draw2);peWire(b,draw2);
+    b.innerHTML=chips([['Works 칸','','#hwk'],['Before / After','','#hba'],['조명 사진','','#hlt']])+peHTML(cTiles)+peHTML(cBa)+peHTML(cLt);
+    wireChips(b);peWire(b,draw2);
   }
   draw2();where('','#hwk');
+};
+V.about=function(b){
+  function draw2(){
+    b.innerHTML=chips([['About 구역','','#designer'],['Process 구역','','#process']])+
+    '<div class="card"><h3>회사 소개</h3><p class="hint">엔터를 누르면 홈페이지에서도 줄이 바뀝니다. 칸을 비우면 처음 문구로 돌아가요.</p>'+txField('aboutLead')+txField('aboutBody')+txField('designer')+'</div>'+
+    '<div class="card"><h3>회사 정보 칸</h3><p class="hint">About 아래 네 칸(경력, 시공 지역, A/S, 고객 평가)입니다.</p>'+pairList('facts',['항목','내용'])+'</div>'+
+    '<div class="card"><h3>진행 절차 (Process)</h3><p class="hint">순서대로 01, 02… 번호가 붙습니다. PC 화면에서는 5개까지 한 줄로 나오고, 6개부터는 다음 줄로 넘어가요.</p>'+pairList('proc',['단계 이름','설명'],true)+'</div>'+
+    '<p class="hint">메인 페이지의 Works 사진·Before / After 는 왼쪽 메뉴 「메인 사진」에서 바꿉니다.</p>';
+    wireTx(b);wireChips(b);wirePairs(b,'facts','','#designer',draw2);wirePairs(b,'proc','','#process',draw2);
+  }
+  draw2();where('','#designer');
 };
 
 V.works=function(b){
