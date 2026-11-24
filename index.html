@@ -276,7 +276,7 @@ footer .biz{display:flex;flex-wrap:wrap;gap:2px 0}footer .biz span:not(:last-chi
 .hs-dots button:hover::before{background:rgba(255,255,255,.5)}
 .hs-dots button::after{width:0;background:rgba(255,255,255,.92)}
 .hs-dots button.done::after{width:24px}
-.hs-dots button[aria-current="true"]::after{animation:hsfill var(--hs-dur,5s) linear forwards}
+.hs-dots button[aria-current="true"]::after{animation:hsfill var(--hs-dur,5s) linear var(--hs-del,0s) forwards}
 .hs.paused .hs-dots button[aria-current="true"]::after{animation-play-state:paused}
 .hs-dots button:focus-visible{outline:2px solid #fff;outline-offset:-8px;border-radius:4px}
 @keyframes hsfill{to{width:24px}}
@@ -1201,16 +1201,27 @@ function render(){
       sl.forEach(function(s,j){if(j===i)s.removeAttribute('aria-hidden');else s.setAttribute('aria-hidden','true');});
       ds.forEach(function(d){d.removeAttribute('aria-current');});void hs.offsetWidth;   /* 진행 막대를 처음부터 다시 */
       ds.forEach(function(d,j){d.classList.toggle('done',j<i);if(j===i)d.setAttribute('aria-current','true');});}
-    /* 관리자에서 정한 간격(기본 5초)마다 넘김. 조명이 켜져 있는 동안은 멈추고, 꺼지면 남은 시간만큼 이어서 */
-    var DUR=hsSec()*1000,left=DUR,t0=0,paused=false,pi=-1;
-    function lit(){if(CT.hsLitGo===true)return false;var l=sl[i]&&sl[i].querySelector('.lt');return !!(l&&l.classList.contains('on'));}
+    /* 관리자에서 정한 간격(기본 5초)마다 넘김. 조명이 켜져 있는 동안은 멈추고(설정 시), 꺼지면 남은 시간만큼 이어서.
+       사진 위에서 커서를 움직이거나 조명을 켜면 다음 사진까지 5초 더 기다린다(한 사진에 한 번 +5초,
+       그 뒤로는 마지막으로 움직인 때부터 최소 5초). 진행 막대도 늘어난 시간에 맞춘다. */
+    var DUR=hsSec()*1000,EXT=5000,start=0,due=0,left=DUR,paused=false,pi=-1,ext=false,wasOn=false,lastB=0;
+    function lit(){if(CT.hsLitGo===true)return false;return litNow();}
+    function litNow(){var l=sl[i]&&sl[i].querySelector('.lt');return !!(l&&l.classList.contains('on'));}
+    function bar(){var d=ds[i];if(!d)return;var now=Date.now();
+      d.style.setProperty('--hs-dur',Math.max(1,due-start)+'ms');d.style.setProperty('--hs-del',-(now-start)+'ms');
+      d.removeAttribute('aria-current');void d.offsetWidth;d.setAttribute('aria-current','true');}
+    function clearBars(){ds.forEach(function(d){d.style.removeProperty('--hs-dur');d.style.removeProperty('--hs-del');});}
     function tick(){if(document.hidden){play();return;}if(lit())return;go(i+1);play();}
-    function play(){clearTimeout(timer);left=DUR;t0=Date.now();timer=setTimeout(tick,left);}
-    function sync(){var p=lit();if(p===paused)return;paused=p;hs.classList.toggle('paused',p);
-      if(p){clearTimeout(timer);left=Math.max(0,left-(Date.now()-t0));pi=i;}
-      else if(pi===i){t0=Date.now();timer=setTimeout(tick,left);}
+    function play(){clearTimeout(timer);clearBars();start=Date.now();due=start+DUR;ext=false;wasOn=litNow();timer=setTimeout(tick,DUR);}
+    function bump(){if(sl.length<2||paused)return;var now=Date.now(),l=due-now,nl=ext?Math.max(l,EXT):l+EXT;ext=true;
+      if(nl<=l+30)return;due=now+nl;clearTimeout(timer);timer=setTimeout(tick,nl);bar();}
+    function sync(){var on=litNow();if(on&&!wasOn)bump();wasOn=on;
+      var p=lit();if(p===paused)return;paused=p;hs.classList.toggle('paused',p);
+      if(p){clearTimeout(timer);left=Math.max(0,due-Date.now());pi=i;}
+      else if(pi===i){var sh=Date.now()-(due-left);start+=sh;due+=sh;timer=setTimeout(tick,Math.max(0,due-Date.now()));}
       else play();}
     if(sl.length>1)new MutationObserver(sync).observe(hs,{subtree:true,attributes:true,attributeFilter:['class']});
+    hs.addEventListener('pointermove',function(e){if(e.pointerType==='touch')return;var n=Date.now();if(n-lastB<200)return;lastB=n;bump();},{passive:true});
     ds.forEach(function(d){d.addEventListener('click',function(e){e.stopPropagation();go(+d.getAttribute('data-i'));play();});});
     /* 휴대폰: 옆으로 밀면 다음/이전 사진 */
     var sx=0,sy=0,st=0;
