@@ -5,7 +5,9 @@
 
 ## 파일
 - `index.html` — 홈페이지 전체 (시안 A · B-Black(`#b`) · B-White(`#bw`) · C · D, 해시 라우팅 한 파일)
-  - 맨 위 `<meta name="robots" content="noindex, nofollow">` 는 정식 오픈 전까지 유지한다.
+  - 2026-11-25 정식 공개: noindex 를 지우고 robots.txt 를 열었다. 다시 막지 않는다.
+  - 검색·AI 용: `<head>` 의 설명·OG·JSON-LD(HomeAndConstructionBusiness), `#app` 안의 `#seo` 정적 본문(자바스크립트를 안 쓰는 수집기용, 화면에서는 숨김), `sitemap.xml`, `llms.txt`.
+    회사 정보·현장·과정이 바뀌면 이 네 곳도 함께 고친다.
   - `API_URL` 은 linnj.kr 에서만 쓰는 Apps Script 서버 주소다. 지우거나 바꾸지 않는다.
 - `admin.html` — 고객용 관리자 페이지 (linnj.kr 에서는 서버 저장, 그 밖의 주소에서는 연습 모드)
 - `img/` — 사진. `img/h*.jpg` 는 시안 B 첫 화면 조명 사진(꺼짐 `hNNN`, 켜짐 `hNNNn`, `-m` 은 1280px)
@@ -18,7 +20,7 @@
 3. 커밋·푸시 → `https://linnj.kr/` 에서 바뀐 내용을 curl 로 확인한다.
 4. 같은 `index.html`·`admin.html` 을 Claude 아티팩트 "Linn & J 홈페이지 시안"
    (slug `40cbcd94-5f52-4208-8c50-40f0c75eef09`, 공개 상태라 `shared_live: "public"`)에도 올린다.
-   아티팩트 쪽은 noindex 줄이 없어도 된다.
+
 5. 초이님께 "해당 내용 수정했습니다." 문구와 변경 전후 비교 이미지를 보낸다.
 
 ## 수정요청
