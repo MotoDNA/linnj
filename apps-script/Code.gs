@@ -5,6 +5,7 @@
  *  1) 관리자 페이지에서 고친 내용(문구·현장·사진 등)을 이 시트의 '내용' 탭에 저장하고, 홈페이지가 읽어 갑니다.
  *  2) 저장할 때마다 '기록' 탭에 바로 전 내용을 남겨 언제든 되돌릴 수 있습니다.
  *  3) 관리자 페이지에서 올린 사진은 드라이브 'Linn&J 홈페이지 사진' 폴더에 저장합니다.
+ *  5) 유튜브 채널·네이버 블로그의 새 글 목록(RSS)을 1시간마다 새로 읽어 홈페이지 YOUTUBE·BLOG 메뉴에 보여 줍니다(?action=feeds).
  *  4) 홈페이지 상담 신청을 '상담접수' 탭에 저장하고, 설정돼 있으면 대표님께 카카오 알림톡(솔라피)을 보냅니다.
  *
  * 처음 한 번: 위쪽 함수 목록에서 setup 을 골라 ▶실행 → 권한 허용
@@ -81,6 +82,7 @@ function resetPasswordFromSheet() {
 function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) || 'content';
   if (action === 'content') return out_(readContent_());
+  if (action === 'feeds') return out_(feeds_());
   return out_({ ok: true, service: 'linnj' });
 }
 
@@ -327,3 +329,47 @@ function or_(s) { s = clean_(s); return s || '-'; }
 function digits_(s) { return String(s).replace(/[^0-9]/g, ''); }
 function safe_(s) { s = clean_(s); return /^[=+\-@]/.test(s) ? "'" + s : s; }
 function hex_(b) { return b.map(function (x) { return ('0' + (x & 255).toString(16)).slice(-2); }).join(''); }
+
+/* ---------------- 유튜브·블로그 새 글 (홈페이지 YOUTUBE·BLOG 메뉴) ----------------
+ * 공개 RSS 만 읽습니다(로그인·열쇠 필요 없음). 1시간 동안 기억해 두었다가 다시 읽습니다. */
+var YT_CHANNEL = 'UCLXfFuGtOb-FVP2j53-jDIA', BLOG_ID = 'jcat107';
+function feeds_() {
+  var cache = CacheService.getScriptCache(), c = cache.get('feeds');
+  if (c) return JSON.parse(c);
+  var out = { ok: true, at: new Date().toISOString(), yt: { l: [], s: [] }, blog: [] }, bad = 0;
+  try { out.yt = ytFeed_(); } catch (err) { bad++; }
+  try { out.blog = blogFeed_(); } catch (err) { bad++; }
+  var t = JSON.stringify(out);
+  if (t.length < 95000) cache.put('feeds', t, bad ? 300 : 3600);
+  return out;
+}
+function xmlText_(s) {
+  s = String(s || '').trim();
+  var m = s.match(/^<!\[CDATA\[([\s\S]*)\]\]>$/); if (m) s = m[1];
+  return s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&#(\d+);/g, function (_, n) { return String.fromCharCode(+n); }).replace(/&amp;/g, '&').replace(/\u00a0/g, ' ').trim();
+}
+function tag_(s, t) { var m = s.match(new RegExp('<' + t + '[^>]*>([\\s\\S]*?)</' + t + '>')); return m ? xmlText_(m[1]) : ''; }
+function ytFeed_() {
+  var x = UrlFetchApp.fetch('https://www.youtube.com/feeds/videos.xml?channel_id=' + YT_CHANNEL, { muteHttpExceptions: true });
+  if (x.getResponseCode() !== 200) throw new Error('yt ' + x.getResponseCode());
+  var es = x.getContentText().split('<entry>').slice(1), r = { l: [], s: [] };
+  es.forEach(function (e) {
+    var id = tag_(e, 'yt:videoId'), link = (e.match(/<link rel="alternate" href="([^"]+)"/) || [])[1] || '';
+    if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return;
+    var it = { id: id, t: tag_(e, 'title'), d: tag_(e, 'published').slice(0, 10) };
+    (link.indexOf('/shorts/') >= 0 ? r.s : r.l).push(it);
+  });
+  return r;
+}
+function blogFeed_() {
+  var x = UrlFetchApp.fetch('https://rss.blog.naver.com/' + BLOG_ID + '.xml', { muteHttpExceptions: true });
+  if (x.getResponseCode() !== 200) throw new Error('blog ' + x.getResponseCode());
+  return x.getContentText('UTF-8').split('<item>').slice(1, 31).map(function (it) {
+    var guid = tag_(it, 'guid'), desc = tag_(it, 'description'), img = (desc.match(/<img src="([^"]+)"/) || [])[1] || '';
+    if (img) img = img.replace(/\?type=\w+$/, '') + '?type=w2';
+    var tx = desc.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().replace(/\.+$/, '');
+    if (tx.length > 140) tx = tx.slice(0, 140) + '…';
+    var d = new Date(tag_(it, 'pubDate'));
+    return { id: guid.split('/').pop(), t: tag_(it, 'title'), d: isNaN(d) ? '' : Utilities.formatDate(d, 'Asia/Seoul', 'yyyy.MM.dd'), c: tag_(it, 'category'), x: tx, img: img };
+  }).filter(function (b) { return /^\d+$/.test(b.id); });
+}
