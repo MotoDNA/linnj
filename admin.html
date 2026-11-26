@@ -270,9 +270,33 @@ var PWK='lj_admin_pw';
 var API=/(^|\.)linnj\.kr$/.test(location.hostname)?'https://script.google.com/macros/s/AKfycbz8hf3-6WhoUjUJQCBb_QuaozmXiesuBNwKEUjZa4GpgmEru5mzTYEhE2O5ZWWIXnYntA/exec':'';
 var PRACTICE=!API,PW='',INB=[],HISTS=[],LOADED=false;
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
-function api(body,tries){tries=tries||3;body.password=PW;
+function rawApi(body,tries){tries=tries||3;body.password=PW;
   return fetch(API,{method:'POST',body:JSON.stringify(body)}).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();})
-   .catch(function(e){if(tries>1)return sleep(700).then(function(){return api(body,tries-1);});throw e;});}
+   .catch(function(e){if(tries>1)return sleep(700).then(function(){return rawApi(body,tries-1);});throw e;});}
+/* 비밀번호가 바뀌었거나 로그인이 오래돼서 서버가 거절하면, 그 자리에서 비밀번호를 다시 묻고 하던 일(저장·사진 올리기)을 이어서 한다. 고치던 내용은 그대로 남는다. */
+function api(body,tries){return rawApi(body,tries).then(function(j){
+  if(j&&!j.ok&&body.action!=='login'&&/비밀번호가 맞지/.test(j.error||''))return askPw().then(function(ok){return ok?rawApi(body,tries):j;});
+  return j;});}
+var PWASK=null;
+function askPw(){if(PWASK)return PWASK;PWASK=new Promise(function(done){
+  var o=document.createElement('div');o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-labelledby','rpT');
+  o.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(20,18,16,.55);display:grid;place-items:center;padding:20px';
+  o.innerHTML='<form style="background:#FFF;border-radius:14px;padding:26px 24px;width:min(400px,100%);box-shadow:0 20px 60px rgba(0,0,0,.25)" novalidate>'+
+   '<h2 id="rpT" style="margin:0 0 8px;font-size:18px">비밀번호를 다시 넣어 주세요</h2>'+
+   '<p style="margin:0 0 16px;font-size:14px;line-height:1.7;color:#6B6358">로그인한 뒤 시간이 지났거나 비밀번호가 바뀌었어요. 지금 고치던 내용은 그대로 있고, 비밀번호를 넣으면 하던 일을 이어서 합니다.</p>'+
+   '<input type="password" id="rpPw" autocomplete="current-password" autocapitalize="off" spellcheck="false" style="width:100%;min-height:44px;padding:10px 12px;border:1px solid #D6D0C6;border-radius:8px;font-size:16px">'+
+   '<p id="rpEr" role="alert" style="min-height:20px;margin:8px 0 0;font-size:13px;color:#B3261E"></p>'+
+   '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button type="button" id="rpNo" class="btn">취소</button><button type="submit" id="rpOk" class="btn pri">확인</button></div></form>';
+  document.body.appendChild(o);var f=o.querySelector('form'),i=o.querySelector('#rpPw'),er=o.querySelector('#rpEr'),ok=o.querySelector('#rpOk');setTimeout(function(){i.focus();},30);
+  function end(v){o.remove();PWASK=null;done(v);}
+  o.querySelector('#rpNo').addEventListener('click',function(){end(false);});
+  f.addEventListener('submit',function(e){e.preventDefault();var p=i.value.trim();if(!p){i.focus();return;}
+    if(/[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(p)){er.textContent='한글이 섞여 있어요. 한/영 키를 눌러 영어로 바꿔 주세요.';return;}
+    ok.disabled=true;ok.textContent='확인 중…';var old=PW;PW=p;
+    rawApi({action:'login'}).then(function(j){ok.disabled=false;ok.textContent='확인';
+      if(j.ok){try{sessionStorage.setItem('lj_pw',p);}catch(_){}end(true);}else{PW=old;er.textContent=j.error||'비밀번호가 맞지 않아요.';i.select();}})
+     .catch(function(){ok.disabled=false;ok.textContent='확인';PW=old;er.textContent='서버에 연결하지 못했어요. 잠시 뒤 다시 해 주세요.';});});});
+  return PWASK;}
 function apiGet(tries){tries=tries||4;
   return fetch(API+'?action=content&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();})
    .catch(function(e){if(tries>1)return sleep(600).then(function(){return apiGet(tries-1);});throw e;});}
@@ -358,7 +382,7 @@ function save(note){
     var c=clone(DRAFT);delete c.updated;
     api({action:'save',content:c,note:typeof note==='string'?note:'저장'}).then(function(j){
       bt.textContent='저장하기';
-      if(!j.ok){updBar();showErr([j.error||'저장하지 못했어요.']);if(/비밀번호/.test(j.error||''))relogin();return;}
+      if(!j.ok){updBar();showErr([j.error||'저장하지 못했어요.']);return;}
       var old=$('#errbox');if(old)old.remove();
       SAVED=clone(DRAFT);updBar();toast('저장했어요. 홈페이지에 바로 나타납니다.');loadHist().then(function(){if(VIEW==='home')draw();});
     }).catch(function(){bt.textContent='저장하기';updBar();showErr(['인터넷 연결이 불안정해서 저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.']);});
@@ -1013,7 +1037,7 @@ function relogin(){try{sessionStorage.removeItem('lj_pw');}catch(e){}toast('다�
       pwSet(p1).then(boot);return;
     }
     if(!PRACTICE){var bt=$('#enter');bt.disabled=true;bt.textContent='확인하는 중…';
-      PW=p1;api({action:'login'}).then(function(j){bt.disabled=false;bt.textContent='관리자 페이지 들어가기';
+      PW=p1;rawApi({action:'login'}).then(function(j){bt.disabled=false;bt.textContent='관리자 페이지 들어가기';
         if(j.ok){try{sessionStorage.setItem('lj_pw',p1);}catch(e){}boot();}else{er.textContent=j.error||'들어가지 못했어요.';$('#pw1').select();}})
        .catch(function(){bt.disabled=false;bt.textContent='관리자 페이지 들어가기';er.textContent='서버에 연결하지 못했어요. 잠시 뒤 다시 해 주세요.';});
       return;}
@@ -1026,7 +1050,7 @@ function relogin(){try{sessionStorage.removeItem('lj_pw');}catch(e){}toast('다�
   });
   setTimeout(function(){$('#pw1').focus();},50);
 })();
-try{if(PRACTICE){if(sessionStorage.getItem('lj_admin_in')&&pwGet())boot();}else if(sessionStorage.getItem('lj_pw')){PW=sessionStorage.getItem('lj_pw');boot();}}catch(e){}
+try{if(PRACTICE){if(sessionStorage.getItem('lj_admin_in')&&pwGet())boot();}else if(sessionStorage.getItem('lj_pw')){PW=sessionStorage.getItem('lj_pw');rawApi({action:'login'}).then(function(j){if(j.ok)boot();else{PW='';try{sessionStorage.removeItem('lj_pw');}catch(_){}var er=$('#pwErr')||$('#pwMsg');if(er)er.textContent='비밀번호를 다시 넣어 주세요. ('+(j.error||'')+')';}}).catch(function(){boot();});}}catch(e){}
 })();
 </script>
 </body>
