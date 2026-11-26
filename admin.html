@@ -74,11 +74,13 @@ input:focus,textarea:focus,select:focus{outline:2px solid #C9AE84;outline-offset
 .li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start;padding:12px;border:1px solid #E7E2DA;border-radius:10px;background:#FBFAF8}
 .li .flds{display:grid;gap:8px}
 .li .ctl{display:flex;flex-direction:column;gap:6px}
-.wk{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px;border:1px solid #E7E2DA;border-radius:10px;background:#FBFAF8}
-.wk img{width:96px;height:64px;object-fit:cover;border-radius:6px;background:#E2DDD5}
-.wk .nm{font-weight:500}
-.wk .meta{font-size:13px;color:#6B6358;margin-top:2px}
-.wk .ctl{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.wk{display:grid;grid-template-columns:22px 40px minmax(120px,200px) minmax(0,1fr);gap:12px;align-items:center;padding:12px;border:1px solid #E7E2DA;border-radius:10px;background:#FBFAF8}
+.wk .mv{display:flex;flex-direction:column;gap:6px}
+.wk .mv .btn{width:40px;padding:0}
+.wk img{width:100%;aspect-ratio:3/2;height:auto;object-fit:cover;border-radius:8px;background:#E2DDD5;display:block}
+.wk .nm{font-weight:500;font-size:16px}
+.wk .meta{font-size:13px;color:#6B6358;margin-top:4px;line-height:1.6}
+.wk .ctl{display:flex;gap:6px;margin-top:10px}
 .cover{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
 .cover img{width:220px;max-width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:8px;background:#E2DDD5}
 .hsl{display:flex;flex-direction:column;gap:10px;margin-top:12px}
@@ -189,9 +191,8 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none}
   .top{padding:14px 16px 10px}
   .body{padding:16px 16px 120px}
   .savebar{padding:10px 16px;flex-wrap:wrap}
-  .wk{grid-template-columns:72px minmax(0,1fr)}
-  .wk img{width:72px;height:52px}
-  .wk .ctl{grid-column:1/-1;justify-content:flex-start}
+  .wk{grid-template-columns:22px 40px minmax(0,1fr);gap:10px}
+  .wk .tx{grid-column:2/-1}
   .li{grid-template-columns:1fr}
   .li .ctl{flex-direction:row}
 }
@@ -729,8 +730,11 @@ V.works=function(b){
   b.innerHTML=chips([['WORKS 페이지','works',''],['메인의 포트폴리오','','']])+
   '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>포트폴리오 현장 ('+W.length+')</h3><p class="hint" style="margin:0">위에 있을수록 먼저 보입니다. ▲▼로 순서를 바꿔요.</p></div><button class="btn pri" type="button" id="addW">+ 새 현장 올리기</button></div>'+
   '<div class="list" style="margin-top:14px">'+W.map(function(w,i){
-    return '<div class="wk">'+GRIP+'<img src="'+(w.cover?esc(img(w.cover)):'')+'" alt=""><div><div class="nm">'+esc(w.name||'(이름 없음)')+'</div><div class="meta">'+esc([w.py,w.loc].filter(Boolean).join(' · '))+' · 사진 '+(w.gallery||[]).length+'장'+(w.yt?' · 영상 있음':'')+'</div></div>'+
-    '<div class="ctl"><button class="btn sm" type="button" data-mv="-1" data-i="'+i+'" aria-label="위로" '+(i?'':'disabled')+'>▲</button><button class="btn sm" type="button" data-mv="1" data-i="'+i+'" aria-label="아래로" '+(i<W.length-1?'':'disabled')+'>▼</button><button class="btn sm" type="button" data-ed="'+i+'">수정</button><button class="btn sm del" type="button" data-rm="'+i+'">삭제</button></div></div>';
+    return '<div class="wk">'+GRIP+
+    '<div class="mv"><button class="btn sm" type="button" data-mv="-1" data-i="'+i+'" aria-label="위로" '+(i?'':'disabled')+'>▲</button><button class="btn sm" type="button" data-mv="1" data-i="'+i+'" aria-label="아래로" '+(i<W.length-1?'':'disabled')+'>▼</button></div>'+
+    '<img src="'+(w.cover?esc(img(w.cover)):'')+'" alt="">'+
+    '<div class="tx"><div class="nm">'+esc(w.name||'(이름 없음)')+'</div><div class="meta">'+esc([w.py,w.loc].filter(Boolean).join(' · '))+' · 사진 '+(w.gallery||[]).length+'장'+(w.yt?' · 영상 있음':'')+'</div>'+
+    '<div class="ctl"><button class="btn sm" type="button" data-ed="'+i+'">수정</button><button class="btn sm del" type="button" data-rm="'+i+'">삭제</button></div></div></div>';
   }).join('')+'</div>'+(DRAFT.works?'<div class="row" style="margin-top:10px"><button class="btn link" type="button" id="defW">현장 목록을 처음 상태로</button></div>':'')+'</div>';
   wireChips(b);
   sortable(b.querySelector('.list'),'.wk',function(f,t){moveItem(ownWorks(),f,t);changed();draw();where('works','');toast('순서를 바꿨어요. 저장하기를 눌러야 홈페이지에 반영됩니다.');});
