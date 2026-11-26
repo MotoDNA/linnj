@@ -15,6 +15,7 @@
  *
  * 알림톡 설정값은 [프로젝트 설정 → 스크립트 속성]에 넣습니다. (코드에 적지 않음)
  *   SOLAPI_KEY, SOLAPI_SECRET, ALERT_TO(알림 받을 번호), PFID(KA01PF...), TEMPLATE_ID(KA01TP...), SMS_FROM(선택, 등록된 발신번호)
+ *   ATTACH_SHARE(선택): 상담 신청서에 첨부된 도면을 함께 볼 구글 계정 이메일(여러 개면 쉼표). 넣어 두면 그 계정에도 보기 권한을 줍니다.
  *   REQ_PW(선택): ONEMILL 수정요청 접수 비밀번호. 넣어 두면 관리자 페이지 [수정 요청]에서 비밀번호 없이 바로 들어갑니다.
  */
 
@@ -230,6 +231,34 @@ function upload_(req) {
 }
 
 /* ---------------- 상담 신청 ---------------- */
+/* 상담 신청서의 도면·참고 파일: 드라이브 'Linn&J 상담 도면' 폴더 아래 접수마다 폴더를 만들어 저장 (링크 공개 안 함) */
+var ATTACH_MAX_FILES = 10, ATTACH_MAX_MB = 25;
+function attachFolder_() {
+  var p = PropertiesService.getScriptProperties(), id = p.getProperty('ATTACH_FOLDER');
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
+  var f = DriveApp.createFolder('Linn&J 상담 도면');
+  p.setProperty('ATTACH_FOLDER', f.getId());
+  return f;
+}
+function saveAttach_(files, d, at) {
+  if (!files || !files.length) return null;
+  files = files.slice(0, ATTACH_MAX_FILES);
+  var ok = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/pdf'], total = 0, blobs = [];
+  files.forEach(function (f) {
+    var mime = String(f && f.mime || '').toLowerCase();
+    if (ok.indexOf(mime) < 0) return;
+    var bytes = Utilities.base64Decode(String(f.data || ''));
+    total += bytes.length;
+    if (total > ATTACH_MAX_MB * 1024 * 1024) return;
+    blobs.push(Utilities.newBlob(bytes, mime, String(f.name || '첨부').replace(/[\\/:*?"<>|]/g, '_').slice(0, 120)));
+  });
+  if (!blobs.length) return null;
+  var sub = attachFolder_().createFolder(at.replace(':', '') + ' ' + clean_(d.nm).slice(0, 20) + ' ' + String(d.ph || '').replace(/[^0-9]/g, '').slice(-4));
+  blobs.forEach(function (b) { sub.createFile(b); });
+  var share = String(PropertiesService.getScriptProperties().getProperty('ATTACH_SHARE') || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+  share.forEach(function (m) { try { sub.addViewer(m); } catch (e) {} });
+  return { n: blobs.length, url: sub.getUrl() };
+}
 function contactSheet_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(CONTACT_SHEET) || ss.insertSheet(CONTACT_SHEET);
@@ -251,15 +280,19 @@ function contact_(d) {
   if (n >= 30) return { ok: false, err: 'rate' };
   cache.put(hourKey, String(n + 1), 3600); cache.put(dupKey, '1', 120);
 
+  var at = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
+  var att = null, files = d.files; delete d.files;
+  try { att = saveAttach_(files, d, at); } catch (err) { att = { n: 0, url: '저장 실패' }; }
+  if (att) d.ms = (d.ms ? d.ms + '\n' : '') + '· 도면·참고 파일 ' + att.n + '개: ' + att.url;
+
   var lock = LockService.getScriptLock(); lock.waitLock(10000);
   var sh = contactSheet_();
-  var at = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
   var id = Utilities.getUuid().slice(0, 8);
   sh.appendRow([at, d.nm, d.ph, d.ct, d.apt, d.py, d.wh, d.bd, d.ms, d.agM ? '동의' : '', d.src, '보내는 중', '', id].map(safe_));
   var row = sh.getLastRow();
   lock.releaseLock();
   sh.getRange(row, 12).setValue(notify_(d, at));
-  return { ok: true };
+  return { ok: true, att: att };
 }
 function inbox_() {
   var sh = contactSheet_(), n = sh.getLastRow() - 1;
