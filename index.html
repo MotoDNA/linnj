@@ -202,6 +202,10 @@ form .f .wide{grid-column:1/-1}
 form .fsec .f{grid-template-columns:repeat(2,minmax(0,1fr))}
 form .req{color:#9C7A4E;margin-left:3px}
 form .fq{margin-top:30px}
+form .acn{margin-top:18px}
+form .acn .fq{margin-top:0;padding:2px 0 4px 14px;border-left:2px solid #E6E1D8}
+form .acn .chips{margin-top:10px}
+form .acn[hidden]{display:none}
 form .fq:first-child{margin-top:0}
 form .fq>.ql{display:block;font-size:13px;opacity:.75}
 form .fq>.ql small{margin-left:6px;font-size:12px;opacity:.8}
@@ -960,6 +964,10 @@ function wire(root){
     ul.addEventListener('click',function(e){var b=e.target.closest('button[data-i]');if(!b)return;f._files.splice(+b.getAttribute('data-i'),1);draw();});
   });
   root.querySelectorAll('form .chips').forEach(function(g){g.addEventListener('change',function(e){var t=e.target;if(t.type!=='checkbox'||!t.checked)return;g.querySelectorAll('input[type=checkbox]').forEach(function(x){if(x!==t&&(t.value==='없음'||x.value==='없음'))x.checked=false;});});});
+  /* 상담 신청서: '시스템 에어컨'을 고르면 몇 대인지(1~8대) 고르는 칸이 나온다. 해제하면 숨기고 고른 대수도 지운다 */
+  root.querySelectorAll('form').forEach(function(f){var box=f.querySelector('.acn'),sys=f.querySelector('input[name="ac"][value="시스템 에어컨"]');if(!box||!sys)return;
+    function sync(){box.hidden=!sys.checked;if(!sys.checked)[].forEach.call(box.querySelectorAll('input'),function(x){x.checked=false;});}
+    [].forEach.call(f.querySelectorAll('input[name="ac"]'),function(x){x.addEventListener('change',sync);});sync();});
   root.querySelectorAll('form').forEach(function(f){f.addEventListener('submit',function(e){e.preventDefault();
       var req=f.querySelector('.consent [data-req]');
       if(req&&!req.checked){var cs=f.querySelector('.consent');cs.classList.add('bad');cs.querySelector('.cerr').hidden=false;cs.scrollIntoView({block:'center',behavior:'smooth'});req.focus({preventScroll:true});return;}
@@ -1153,7 +1161,7 @@ function contactForm(btnCls){
      '<div class="f" style="margin-top:30px">'+inp('ad','인테리어 건물 주소',{wide:1,ph:'OO시 OO구 OO동 OO아파트 O동 O호'})+inp('py','평형대',{ph:'40평대, 37평 등'})+inp('bd','인테리어 예산')+inp('ws','공사 시작 희망일')+inp('mv','입주 예정일')+inp('fm','가족 구성원',{wide:1,ph:'신혼부부, 두자녀(4세, 7세) 부부 등'})+'</div>')+
    sec('03','공사 계획',chips('xp','집 내부 확장 계획',['없음','거실','주방','방'],1)+chips('sa','샷시 교체 계획',['없음','전체 교체','부분 교체'])+
      chips('wl','벽면 마감재 계획',['도장','도배','필름','타일','잘 모르겠음'],1)+chips('fl','바닥재 공사 계획',['강마루','원목마루','포세린타일','잘 모르겠음'],1)+
-     chips('ac','에어컨 타입',['없음','시스템 에어컨','스탠드 에어컨'],1)+chips('ba','욕실 공사',['일반형','중간형','고급형']))+
+     chips('ac','에어컨 타입',['없음','시스템 에어컨','스탠드 에어컨'],1)+'<div class="acn" hidden>'+chips('acn','시스템 에어컨 대수',['1대','2대','3대','4대','5대','6대','7대','8대'])+'</div>'+chips('ba','욕실 공사',['일반형','중간형','고급형']))+
    sec('04','남기실 말씀','<div class="fq"><label class="ql" for="ms">하고 싶은 말</label><textarea id="ms" rows="4"></textarea></div>'+
      '<div class="fup"><span class="ql" id="q_up">도면 또는 참고 디자인파일 업로드</span><input type="file" id="up" multiple accept="image/*,.pdf,application/pdf" aria-labelledby="q_up"><label class="upb" for="up"><span aria-hidden="true">＋</span>파일 선택</label><ul class="upl"></ul><p class="upm" role="alert" hidden></p></div>'+chips('rf','유입경로',['유튜브','인스타그램','블로그','홈페이지','지인추천','구글 검색','오늘의집']))+
    '<div class="fsub">'+consentBlock()+'<button class="'+btnCls+'" type="submit" style="margin-top:20px">상담 신청</button></div></form>';}
@@ -1177,7 +1185,7 @@ function formData(f){
   var d={nm:v('nm'),ph:v('ph'),ct:v('ct'),py:v('py'),bd:v('bd')};
   d.apt=[pick('bt'),v('ad')].filter(Boolean).join(' · ');
   d.wh=[v('ws')&&('공사 시작 '+v('ws')),v('mv')&&('입주 '+v('mv'))].filter(Boolean).join(' / ');
-  var rows=[['이메일',v('em')],['가족 구성원',v('fm')],['확장',pick('xp')],['샷시',pick('sa')],['벽면 마감재',pick('wl')],['바닥재',pick('fl')],['에어컨',pick('ac')],['욕실',pick('ba')],['유입경로',pick('rf')]].filter(function(r){return r[1];});
+  var rows=[['이메일',v('em')],['가족 구성원',v('fm')],['확장',pick('xp')],['샷시',pick('sa')],['벽면 마감재',pick('wl')],['바닥재',pick('fl')],['에어컨',pick('ac').replace('시스템 에어컨',pick('acn')?'시스템 에어컨 '+pick('acn'):'시스템 에어컨')],['욕실',pick('ba')],['유입경로',pick('rf')]].filter(function(r){return r[1];});
   d.ms=[v('ms'),rows.map(function(r){return '· '+r[0]+': '+r[1];}).join('\n')].filter(Boolean).join('\n\n');
   return d;
 }
