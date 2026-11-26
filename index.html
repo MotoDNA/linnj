@@ -1347,7 +1347,8 @@ var TX={
  aboutDBody:{g:'hero',v:'d',l:'시안 D · 회사소개 글',d:'린하우징 & 제이 인테리어 스튜디오는 전국의 아파트를\n오래 살아도 편안한 집으로 다시 짓습니다.\n없앨 수 없는 내력벽과 기둥은 디자인으로 풀어내고,\n설계부터 시공, 영상 기록까지 한 팀이 직접 진행합니다.',big:1,page:'about'}
 };
 var CT={};                 /* 관리자에서 저장한 내용 */
-function tx(k){var v=(CT.tx&&CT.tx[k]!=null&&CT.tx[k]!=='')?CT.tx[k]:TX[k].d;return esc(v).replace(/\n/g,'<br>');}
+/* 엔터(줄바꿈)는 그대로 줄로. 글 끝의 엔터도 빈 줄로 보이도록 마지막에 <br> 하나를 더 붙인다(브라우저는 끝의 <br> 하나를 그리지 않음) */
+function tx(k){var v=(CT.tx&&CT.tx[k]!=null&&CT.tx[k]!=='')?CT.tx[k]:TX[k].d;return esc(v).replace(/\r?\n/g,'<br>')+(/\n$/.test(v)?'<br>':'');}
 var WF=['name','py','band','loc','type','line','yt','hero','cover','gallery','light','ba','before','small'];
 var WFA={gallery:1,light:1,ba:1,before:1,small:1};   /* 사진 목록(배열) 칸 */   /* 관리자에서 고칠 수 있는 현장 정보 */
 var DEF=null;

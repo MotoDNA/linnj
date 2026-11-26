@@ -416,7 +416,7 @@ function msRows(ms,r){
 function txField(k){
   if(!DEF.tx[k])return '';
   var t=DEF.tx[k],v=txv(k),ch=DRAFT.tx&&DRAFT.tx[k]!=null;
-  var inp=t.one?'<input type="text" id="tx_'+k+'" data-tx="'+k+'" value="'+esc(v)+'">':'<textarea id="tx_'+k+'" data-tx="'+k+'" rows="'+(t.big?5:3)+'">'+esc(v)+'</textarea>';
+  var inp=t.one?'<input type="text" id="tx_'+k+'" data-tx="'+k+'" value="'+esc(v)+'">':'<textarea id="tx_'+k+'" data-tx="'+k+'" rows="'+(t.big?5:3)+'">\n'+esc(v)+'</textarea>';
   return '<div class="f"><label for="tx_'+k+'"><span>'+esc(t.l)+'</span><span>'+(ch?'<span class="chg">바꾼 문구</span> <button class="btn link" type="button" data-reset="'+k+'">기본 문구로</button>':'')+'</span></label>'+inp+'</div>';
 }
 function wireTx(root){
