@@ -923,13 +923,22 @@ function wire(root){
       if(!API_URL||PREVIEW){done();return;}
       var bt=f.querySelector('button[type=submit]'),bl=bt?bt.textContent:'';if(bt){bt.disabled=true;bt.textContent='보내는 중…';}
       var body=JSON.parse(JSON.stringify(d));body.hp=(f.querySelector('#hp')||{}).value||'';body.t=f.getAttribute('data-t');
-      fetch(API_URL,{method:'POST',body:JSON.stringify(body)}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok)done();else throw new Error((j&&j.err)||'fail');}).catch(function(){
+      fetch(API_URL,{method:'POST',body:JSON.stringify(body)}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok){done();notifyHub(d,body);}else throw new Error((j&&j.err)||'fail');}).catch(function(){
         if(bt){bt.disabled=false;bt.textContent=bl;}
         var em=f.querySelector('.ferr');if(!em){em=document.createElement('p');em.className='ferr';em.setAttribute('role','alert');em.style.cssText='color:#C0392B;font-size:14px;margin:14px 0 0';f.appendChild(em);}
         em.innerHTML='전송하지 못했습니다. 잠시 후 다시 시도하시거나 <a href="tel:'+tx('phone').replace(/[^0-9]/g,'')+'">'+tx('phone')+'</a>로 전화 주세요.';
       });
     });});
 }
+
+/* ---- 상담 알림: 접수가 저장되면 DNA LABS 상담알림 허브로도 보내 사장님 폰에 카톡(실패 시 문자) 알림 ----
+   허브 '고객사' 시트의 linnj 줄에서 받을 번호·발송방식·사용 여부를 정한다. 알림이 실패해도 접수는 이미 저장돼 있다. */
+var HUB_URL='https://script.google.com/macros/s/AKfycbzqxtP6tYTGIsjLdH_TWFhisn2u77UIPDrqCHa7RwJcGDU7AWaCWap_P9B0H7u07sNa/exec',HUB_ID='linnj';
+function notifyHub(d,body){try{
+  var m=[d.apt&&('단지 '+d.apt),d.py&&('평형 '+d.py),d.wh&&('희망 시기 '+d.wh),d.bd&&('예산 '+d.bd),d.ct&&('통화 가능 '+d.ct),d.ms].filter(Boolean).join(' / ');
+  fetch(HUB_URL,{method:'POST',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({clientId:HUB_ID,name:d.nm,phone:d.ph,message:m.slice(0,500),agree:true,website:body.hp||'',openedAt:Number(body.t)||0,page:location.href})}).catch(function(){});
+}catch(_){}}
 
 /* ---- shared pieces ---- */
 /* 홈페이지 서버(구글 Apps Script) 주소. 실제 홈페이지(linnj.kr)에서만 사용, 시안에서는 예시 모드(브라우저에만 저장) */
