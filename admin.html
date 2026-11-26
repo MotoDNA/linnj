@@ -963,12 +963,12 @@ function hubCall(body){body.clientId=HUB_ID;body.password=PW;
 function hubApi(body){return hubCall(body).then(function(j){if(j&&!j.ok&&/비밀번호가 맞지/.test(j.error||''))return askPw().then(function(ok){return ok?hubCall(body):j;});return j;});}
 function fmtTel(v){var d=String(v||'').replace(/\D/g,'').slice(0,11);return d.length<4?d:d.length<8?d.replace(/(\d{3})(\d+)/,'$1-$2'):d.replace(/(\d{3})(\d{3,4})(\d{4})$/,'$1-$2-$3');}
 V.alert=function(b){
-  b.innerHTML='<div class="card"><h3>상담 알림 받을 번호</h3><p class="hint">홈페이지에서 상담 신청이 들어오면 아래 번호로 카카오톡 알림이 바로 갑니다(카톡을 못 받으면 문자). 여러 명이 받으려면 [+ 번호 추가]를 누르세요. 최대 5개.'+(PRACTICE?' 지금은 연습 모드라 실제로 저장되지 않아요.':'')+'</p><div id="alBox"><p class="hint">불러오는 중…</p></div></div>';
+  b.innerHTML='<div class="card"><h3>상담 알림 받을 번호</h3><p class="hint">홈페이지에서 상담 신청이 들어오면 아래 번호로 카카오톡 알림이 바로 갑니다(카톡을 못 받으면 문자). 두 명이 받으려면 [+ 번호 추가]를 누르세요. 최대 2개.'+(PRACTICE?' 지금은 연습 모드라 실제로 저장되지 않아요.':'')+'</p><div id="alBox"><p class="hint">불러오는 중…</p></div></div>';
   var box=b.querySelector('#alBox');
-  function paint(st){var ph=(st.phones&&st.phones.length)?st.phones.slice():[''];
+  function paint(st){var ph=(st.phones&&st.phones.length)?st.phones.slice(0,2):[''];
     box.innerHTML='<label class="row" style="gap:10px;align-items:center;margin:4px 0 16px;font-size:15px"><input type="checkbox" id="alOn" style="width:20px;height:20px"'+(st.enabled?' checked':'')+'> 상담 알림 받기</label>'+
       '<div id="alList">'+ph.map(function(p,i){return '<div class="row" style="gap:8px;margin-bottom:8px"><label class="sr" for="alP'+i+'">받을 번호 '+(i+1)+'</label><input id="alP'+i+'" type="tel" inputmode="numeric" maxlength="13" placeholder="010-0000-0000" autocomplete="tel" value="'+esc(fmtTel(p))+'" style="max-width:240px"><button class="btn sm del" type="button" data-alrm="'+i+'" aria-label="'+(i+1)+'번 번호 지우기">삭제</button></div>';}).join('')+'</div>'+
-      (ph.length<5?'<button class="btn sm" type="button" id="alAdd">+ 번호 추가</button>':'')+
+      (ph.length<2?'<button class="btn sm" type="button" id="alAdd">+ 번호 추가</button>':'')+
       '<p id="alMsg" role="status" style="min-height:20px;margin:14px 0 0;font-size:13px"></p>'+
       '<div class="row" style="margin-top:10px"><button class="btn pri" type="button" id="alSave">번호 저장</button></div>';
     var cur=function(){return [].map.call(box.querySelectorAll('#alList input'),function(x){return x.value;});};
@@ -981,6 +981,7 @@ V.alert=function(b){
       msg.style.color='#B42318';
       if(bad.length){msg.textContent='휴대폰 번호를 다시 확인해 주세요: '+bad.map(fmtTel).join(', ');return;}
       if(on&&!l.length){msg.textContent='알림을 받을 번호를 하나 이상 넣어 주세요.';return;}
+      if(l.length>2){msg.textContent='번호는 2개까지 넣을 수 있어요.';return;}
       var bt=box.querySelector('#alSave');bt.disabled=true;bt.textContent='저장 중…';msg.textContent='';
       var p=PRACTICE?Promise.resolve({ok:true,phones:l.map(fmtTel),enabled:on}):hubApi({action:'setAlert',phones:l.join(','),enabled:on});
       p.then(function(j){bt.disabled=false;bt.textContent='번호 저장';
