@@ -166,18 +166,17 @@ button{font:inherit;color:inherit}
 .tile:hover .ov .ln,.tile:focus-visible .ov .ln{width:120px}
 .tile:hover img{transform:scale(1.05)}
 @media (hover:none){.ov{opacity:1;background:linear-gradient(rgba(0,0,0,0) 55%,rgba(0,0,0,.6));justify-content:flex-end;align-items:flex-start;gap:2px;padding:14px;text-align:left}.ov>*{opacity:1;transform:none}.ov .ln,.ov .lg{display:none}.ov .nm{font-size:14px}.ov .py{font-size:12px}}
-@media (hover:none){
-  .tile.tw .ov{opacity:0;background:rgba(20,18,16,.52);justify-content:center;align-items:center;gap:12px;padding:16px;text-align:center;transition:none}
-  .tile.tw .ov>*{opacity:0;transform:translateY(10px)}
-  .tile.tw .ov .lg,.tile.tw .ov .ln{display:block}
-  .tile.tw .ov .ln{width:0;opacity:1;transform:none}
-  .tile.tw .ov .nm{font-size:17px}.tile.tw .ov .py{font-size:13px}
-  .tile.tw:not(.tw2) .ov>*,.tile.tw:not(.tw2) img{transition:none}
-  .tile.tw2 .ov{opacity:1;transition:opacity .8s ease}
-  .tile.tw2 .ov>*{opacity:1;transform:none}
-  .tile.tw2 .ov .ln{width:120px}
-  .tile.tw2 img{transform:scale(1.05)}
-}
+/* 휴대폰 WORKS를 손가락으로 눌렀을 때: PC 마우스 오버와 같은 애니메이션 후 이동 (기기 종류와 관계없이 .tw/.tw2 가 붙었을 때만) */
+.tile.tw .ov{opacity:0;background:rgba(20,18,16,.52);justify-content:center;align-items:center;gap:12px;padding:16px;text-align:center;transition:none}
+.tile.tw .ov>*{opacity:0;transform:translateY(10px)}
+.tile.tw .ov .lg,.tile.tw .ov .ln{display:block}
+.tile.tw .ov .ln{width:0;opacity:1;transform:none}
+.tile.tw .ov .nm{font-size:17px}.tile.tw .ov .py{font-size:13px}
+.tile.tw:not(.tw2) .ov>*,.tile.tw:not(.tw2) img{transition:none}
+.tile.tw2 .ov{opacity:1;transition:opacity .8s ease}
+.tile.tw2 .ov>*{opacity:1;transform:none}
+.tile.tw2 .ov .ln{width:120px}
+.tile.tw2 img{transform:scale(1.05)}
 @media (prefers-reduced-motion:reduce){.tile img,.ov,.ov>*,.ov .ln{transition:none}}
 .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
 .dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(max(150px,(100% - 36px)/4),1fr));gap:12px}
@@ -873,7 +872,12 @@ function wire(root){
   });
   wireReviews(root);wireYT(root);wireBlog(root);
   /* 휴대폰 WORKS: 현장을 누르면 PC 마우스 오버와 같은 애니메이션(어두워짐·확대·로고·이름·선·평형)을 끝까지 보여 준 뒤 상세 페이지로. PC는 그대로 */
-  if(NOHOV())root.querySelectorAll('.wkgo a.tile').forEach(function(a){a.addEventListener('click',function(e){
+  /* (삼성 인터넷 등 일부 갤럭시는 '마우스 있는 기기'로 잘못 알려 주므로, 기기 종류가 아니라 실제로 손가락으로 눌렀는지로 판단) */
+  root.querySelectorAll('.wkgo a.tile').forEach(function(a){var tch=0;
+    a.addEventListener('touchstart',function(){tch=Date.now();},{passive:true});
+    a.addEventListener('pointerdown',function(e){if(e.pointerType==='touch'||e.pointerType==='pen')tch=Date.now();});
+    a.addEventListener('click',function(e){
+    if(!(NOHOV()||Date.now()-tch<1500))return;
     var rm=false;try{rm=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){}if(rm)return;
     e.preventDefault();if(a.classList.contains('tw'))return;
     a.classList.add('tw');void a.offsetWidth;requestAnimationFrame(function(){requestAnimationFrame(function(){a.classList.add('tw2');});});
