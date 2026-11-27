@@ -39,6 +39,11 @@ a{color:inherit}
 .nav a:hover{background:#2B2825}
 .nav a[aria-current=page]{background:#F1E3C4;color:#1C1A18}
 .nav .badge{min-width:22px;height:22px;padding:0 7px;border-radius:11px;background:#E8730C;color:#FFF;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+.reqwrap{padding:0 10px 14px}
+.reqbtn{display:flex;align-items:center;justify-content:center;min-height:46px;border-radius:10px;background:#C9AE84;color:#1C1A18;font-size:14px;font-weight:700;letter-spacing:.04em;text-decoration:none;border:1px solid #C9AE84}
+.reqbtn:hover{background:#D8C29C}
+.reqbtn[aria-current=page]{background:#F1E3C4;border-color:#F1E3C4}
+.reqbtn:focus-visible{outline:2px solid #F1E3C4;outline-offset:2px}
 .side .foot{padding:16px 22px;font-size:12px;color:#8A8177;border-top:1px solid #34302C;line-height:1.7}
 .side .foot a{color:#D9D3CA}
 
@@ -190,6 +195,8 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none}
   .side .brand,.side .foot,.nav .cap{display:none}
   .nav{display:flex;overflow-x:auto;padding:8px;gap:4px;flex:1}
   .nav a{flex:none}
+  .reqwrap{padding:8px 8px 8px 0;display:flex;align-items:center}
+  .reqbtn{min-height:38px;padding:0 14px;font-size:13px;white-space:nowrap}
   .top{padding:14px 16px 10px}
   .body{padding:16px 16px 120px}
   .savebar{padding:10px 16px;flex-wrap:wrap}
@@ -231,6 +238,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none}
   <aside class="side">
     <div class="brand"><b>LINN &amp; J</b><span>홈페이지 관리자</span></div>
     <nav class="nav" id="nav" aria-label="관리 메뉴"></nav>
+    <div class="reqwrap"><a href="#request" class="reqbtn" id="reqBtn">자동수정요청</a></div>
     <div class="foot" id="sideFoot">연습 모드 · 이 브라우저에만 저장<br><a href="index.html#a" target="_blank" rel="noopener">홈페이지 새 창으로 보기 ↗</a></div>
   </aside>
 
@@ -331,7 +339,7 @@ var MENU=[
   ['instagram','INSTAGRAM','인스타그램 주소'],
   ['cap','그 밖에'],
   ['texts','홈페이지 문구','첫 화면 문구 · 회사 정보'],
-  ['request','수정 요청','디자인·기능 수정을 제작사(디엔에이랩스)에 요청하기'],
+  ['request','자동수정요청','디자인·기능 수정을 제작사(디엔에이랩스)에 요청하기'],
   ['pw','비밀번호 설정','관리자 비밀번호 바꾸기']
 ];
 /* 제작사 수정요청 접수 화면 (고객 전용 주소, 들어갈 때 비밀번호 필요) */
@@ -941,7 +949,7 @@ V.texts=function(b){
 
 V.request=function(b){
   var REQ_ORIGIN='https://motodna.github.io',REQ_C=(REQ_URL.match(/[?&]c=([^&#]+)/)||[])[1]||'';
-  b.innerHTML='<div class="card"><h3>제작사에 수정 요청하기</h3><p class="hint">글·사진·현장 목록·연락처처럼 이 관리자 페이지에서 직접 고칠 수 있는 것은 바로 고치시면 됩니다. '+
+  b.innerHTML='<div class="card"><h3>자동수정요청</h3><p class="hint">글·사진·현장 목록·연락처처럼 이 관리자 페이지에서 직접 고칠 수 있는 것은 바로 고치시면 됩니다. '+
    '그 밖에 <b>색·배치·메뉴 구성·새 기능</b>처럼 직접 고칠 수 없는 것은 아래 접수 화면에 남겨 주세요. 사진이나 캡처를 함께 올리실 수 있고, 진행 상태(접수 · 작업중 · 반영완료)도 여기서 확인하실 수 있습니다.</p>'+
    '<ol class="hint" style="padding-left:18px;margin:0 0 14px"><li>관리자 페이지에 들어와 있으면 접수 화면에 <b>비밀번호 없이 바로</b> 들어갑니다.</li><li>어느 페이지의 무엇을 어떻게 바꾸고 싶은지 적고 보냅니다.</li><li>반영되면 상태가 “반영완료”로 바뀌고 답변이 달립니다.</li></ol>'+
    '<button class="btn pri" type="button" id="reqOpen">접수 화면 새 창으로 열기 ↗</button></div>'+
@@ -1018,8 +1026,9 @@ V.pw=function(b){
 /* ---------- 그리기 ---------- */
 function navBadge(){var n=inb().filter(function(x){return !x.done;}).length,a=$('#nav a[href="#contact"] .badge');if(a){a.textContent=n;a.classList.toggle('hide',!n);}}
 function drawNav(){
-  $('#nav').innerHTML=MENU.map(function(m){if(m[0]==='cap')return '<div class="cap">'+m[1]+'</div>';
+  $('#nav').innerHTML=MENU.map(function(m){if(m[0]==='request')return '';if(m[0]==='cap')return '<div class="cap">'+m[1]+'</div>';
     return '<a href="#'+m[0]+'"'+(VIEW===m[0]?' aria-current="page"':'')+'><span>'+m[1]+'</span>'+(m[0]==='contact'?'<span class="badge hide">0</span>':'')+'</a>';}).join('');
+  var rb=$('#reqBtn');if(rb){if(VIEW==='request')rb.setAttribute('aria-current','page');else rb.removeAttribute('aria-current');}
   navBadge();
 }
 var LASTV='';
