@@ -166,6 +166,18 @@ button{font:inherit;color:inherit}
 .tile:hover .ov .ln,.tile:focus-visible .ov .ln{width:120px}
 .tile:hover img{transform:scale(1.05)}
 @media (hover:none){.ov{opacity:1;background:linear-gradient(rgba(0,0,0,0) 55%,rgba(0,0,0,.6));justify-content:flex-end;align-items:flex-start;gap:2px;padding:14px;text-align:left}.ov>*{opacity:1;transform:none}.ov .ln,.ov .lg{display:none}.ov .nm{font-size:14px}.ov .py{font-size:12px}}
+@media (hover:none){
+  .tile.tw .ov{opacity:0;background:rgba(20,18,16,.52);justify-content:center;align-items:center;gap:12px;padding:16px;text-align:center;transition:none}
+  .tile.tw .ov>*{opacity:0;transform:translateY(10px)}
+  .tile.tw .ov .lg,.tile.tw .ov .ln{display:block}
+  .tile.tw .ov .ln{width:0;opacity:1;transform:none}
+  .tile.tw .ov .nm{font-size:17px}.tile.tw .ov .py{font-size:13px}
+  .tile.tw:not(.tw2) .ov>*,.tile.tw:not(.tw2) img{transition:none}
+  .tile.tw2 .ov{opacity:1;transition:opacity .8s ease}
+  .tile.tw2 .ov>*{opacity:1;transform:none}
+  .tile.tw2 .ov .ln{width:120px}
+  .tile.tw2 img{transform:scale(1.05)}
+}
 @media (prefers-reduced-motion:reduce){.tile img,.ov,.ov>*,.ov .ln{transition:none}}
 .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
 .dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(max(150px,(100% - 36px)/4),1fr));gap:12px}
@@ -860,6 +872,12 @@ function wire(root){
     el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openLB(el.getAttribute('data-lb'),false);}});
   });
   wireReviews(root);wireYT(root);wireBlog(root);
+  /* 휴대폰 WORKS: 현장을 누르면 PC 마우스 오버와 같은 애니메이션(어두워짐·확대·로고·이름·선·평형)을 끝까지 보여 준 뒤 상세 페이지로. PC는 그대로 */
+  if(NOHOV())root.querySelectorAll('.wkgo a.tile').forEach(function(a){a.addEventListener('click',function(e){
+    var rm=false;try{rm=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){}if(rm)return;
+    e.preventDefault();if(a.classList.contains('tw'))return;
+    a.classList.add('tw');void a.offsetWidth;requestAnimationFrame(function(){requestAnimationFrame(function(){a.classList.add('tw2');});});
+    setTimeout(function(){location.hash=a.getAttribute('href');},1250);});});
   root.querySelectorAll('.cols2,.cols3,.mason').forEach(masonry);
   root.querySelectorAll('.strip').forEach(function(el){
     var target=el.scrollLeft,raf=0,still=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -964,6 +982,10 @@ function wire(root){
     ul.addEventListener('click',function(e){var b=e.target.closest('button[data-i]');if(!b)return;f._files.splice(+b.getAttribute('data-i'),1);draw();});
   });
   root.querySelectorAll('form .chips').forEach(function(g){g.addEventListener('change',function(e){var t=e.target;if(t.type!=='checkbox'||!t.checked)return;g.querySelectorAll('input[type=checkbox]').forEach(function(x){if(x!==t&&(t.value==='없음'||x.value==='없음'))x.checked=false;});});});
+  /* 상담 신청서 연락처: 숫자만 넣어도 010-0000-0000 처럼 하이픈이 자동으로 들어감 (02 지역번호도 맞춤). 고치던 자리의 커서는 그대로 */
+  root.querySelectorAll('form input[type=tel]').forEach(function(el){el.addEventListener('input',function(){
+    var pos=el.selectionStart||0,before=el.value.slice(0,pos).replace(/\D/g,'').length,v=fmtPhone(el.value);if(v===el.value)return;el.value=v;
+    var n=0,i=0;while(i<v.length&&n<before){if(/\d/.test(v[i]))n++;i++;}try{el.setSelectionRange(i,i);}catch(_){}});});
   /* 상담 신청서: '시스템 에어컨'을 고르면 몇 대인지(1~8대) 고르는 칸이 나온다. 해제하면 숨기고 고른 대수도 지운다 */
   root.querySelectorAll('form').forEach(function(f){var box=f.querySelector('.acn'),sys=f.querySelector('input[name="ac"][value="시스템 에어컨"]');if(!box||!sys)return;
     function sync(){box.hidden=!sys.checked;if(!sys.checked)[].forEach.call(box.querySelectorAll('input'),function(x){x.checked=false;});}
@@ -992,6 +1014,10 @@ function wire(root){
 /* ---- 상담 알림: 접수가 저장되면 DNA LABS 상담알림 허브로도 보내 사장님 폰에 카톡(실패 시 문자) 알림 ----
    허브 '고객사' 시트의 linnj 줄에서 받을 번호·발송방식·사용 여부를 정한다. 알림이 실패해도 접수는 이미 저장돼 있다. */
 var HUB_URL='https://script.google.com/macros/s/AKfycbzqxtP6tYTGIsjLdH_TWFhisn2u77UIPDrqCHa7RwJcGDU7AWaCWap_P9B0H7u07sNa/exec',HUB_ID='linnj';
+function fmtPhone(v){var d=String(v||'').replace(/\D/g,'').slice(0,11);
+  if(/^02/.test(d)){d=d.slice(0,10);return d.length<3?d:d.length<6?d.slice(0,2)+'-'+d.slice(2):d.length<10?d.slice(0,2)+'-'+d.slice(2,5)+'-'+d.slice(5):d.slice(0,2)+'-'+d.slice(2,6)+'-'+d.slice(6);}
+  if(/^010/.test(d))return d.length<4?d:d.length<8?d.slice(0,3)+'-'+d.slice(3):d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);   /* 010 은 입력하는 동안에도 3-4-4 */
+  return d.length<4?d:d.length<8?d.slice(0,3)+'-'+d.slice(3):d.length<11?d.slice(0,3)+'-'+d.slice(3,6)+'-'+d.slice(6):d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);}
 function notifyHub(d,body){try{
   var m=[d.apt&&('단지 '+d.apt),d.py&&('평형 '+d.py),d.wh&&('희망 시기 '+d.wh),d.bd&&('예산 '+d.bd),d.ct&&('통화 가능 '+d.ct),d.ms].filter(Boolean).join(' / ');
   fetch(HUB_URL,{method:'POST',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},
@@ -1152,7 +1178,7 @@ function openFull(k,box){
   d.querySelector('.db').scrollTop=0;
 }
 function contactForm(btnCls){
-  function inp(id,label,o){o=o||{};return '<div'+(o.wide?' class="wide"':'')+'><label for="'+id+'">'+label+(o.req?'<span class="req" aria-hidden="true">*</span>':'')+'</label><input id="'+id+'"'+(o.type?' type="'+o.type+'"':'')+(o.ac?' autocomplete="'+o.ac+'"':'')+(o.ph?' placeholder="'+o.ph+'"':'')+(o.req?' aria-required="true"':'')+'></div>';}
+  function inp(id,label,o){o=o||{};return '<div'+(o.wide?' class="wide"':'')+'><label for="'+id+'">'+label+(o.req?'<span class="req" aria-hidden="true">*</span>':'')+'</label><input id="'+id+'"'+(o.type?' type="'+o.type+'"':'')+(o.ac?' autocomplete="'+o.ac+'"':'')+(o.ph?' placeholder="'+o.ph+'"':'')+(o.req?' aria-required="true"':'')+(o.type==='tel'?' inputmode="numeric" maxlength="13"':'')+'></div>';}
   function chips(name,label,opts,multi){return '<div class="fq" role="group" aria-labelledby="q_'+name+'"><span class="ql" id="q_'+name+'">'+label+(multi?'<small>여러 개 선택 가능</small>':'')+'</span><div class="chips">'+opts.map(function(o){return '<label class="chip"><input type="'+(multi?'checkbox':'radio')+'" name="'+name+'" value="'+o+'"><span>'+o+'</span></label>';}).join('')+'</div></div>';}
   function sec(no,title,body){return '<div class="fsec"><h2><span class="no">'+no+'</span>'+title+'</h2>'+body+'</div>';}
   return '<form data-t="'+Date.now()+'"><input id="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">'+
@@ -1252,7 +1278,7 @@ var B={
   return h;
  },
  works:function(band){
-  var h='<div class="'+BCLS()+'">'+hdr(BV,'works')+'<section class="wrap" style="padding-top:72px"><h1 style="margin:0;font-size:clamp(36px,5vw,60px);font-weight:300">Works</h1><div class="filt" role="group" aria-label="평형으로 보기" style="flex-direction:row;flex-wrap:wrap;gap:0 22px;margin-top:20px">'+BANDS.map(function(b){return '<button type="button" data-band="'+b[0]+'" aria-pressed="'+(b[0]===band)+'">'+b[1]+'</button>';}).join('')+'</div></section><section class="wrap" style="margin-top:28px"><div class="grid3">';
+  var h='<div class="'+BCLS()+'">'+hdr(BV,'works')+'<section class="wrap" style="padding-top:72px"><h1 style="margin:0;font-size:clamp(36px,5vw,60px);font-weight:300">Works</h1><div class="filt" role="group" aria-label="평형으로 보기" style="flex-direction:row;flex-wrap:wrap;gap:0 22px;margin-top:20px">'+BANDS.map(function(b){return '<button type="button" data-band="'+b[0]+'" aria-pressed="'+(b[0]===band)+'">'+b[1]+'</button>';}).join('')+'</div></section><section class="wrap" style="margin-top:28px"><div class="grid3 wkgo">';
   h+=filterWorks(band).map(function(p){return tile(BV,p,p.hero,'r43');}).join('');
   return h+'</div></section>'+foot()+'</div>';
  },
