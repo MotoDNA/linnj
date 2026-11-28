@@ -957,7 +957,7 @@ V.request=function(b){
   // 서버에서 접수 비밀번호를 받아(관리자 로그인 상태에서만) 접수 화면이 "준비됨"을 알리면 건네준다
   var reqPw=null,fr=b.querySelector('#reqFrame'),wins=[];
   function hand(w){if(reqPw&&w){try{w.postMessage({type:'onemill-pw',c:REQ_C,pw:reqPw},REQ_ORIGIN);}catch(e){}}}
-  if(!PRACTICE){api({action:'reqpw'}).then(function(j){if(j&&j.ok&&j.pw){reqPw=j.pw;hand(fr.contentWindow);wins.forEach(hand);}}).catch(function(){});}
+  getReqPw().then(function(p){if(p){reqPw=p;hand(fr.contentWindow);wins.forEach(hand);}});
   if(window._reqMsg)window.removeEventListener('message',window._reqMsg);
   window._reqMsg=function(e){if(e.origin!==REQ_ORIGIN||!e.data||e.data.type!=='onemill-ready')return;if(wins.indexOf(e.source)<0)wins.push(e.source);hand(e.source);};
   window.addEventListener('message',window._reqMsg);
@@ -1068,8 +1068,12 @@ function start(){
   if(window.innerWidth<=720){DEV='mob';$('#dseg').querySelectorAll('button').forEach(function(y){y.setAttribute('aria-pressed',y.dataset.d==='mob');});}
   route();fitFrame();preview(true);
 }
+/* 자동수정요청 접수 비밀번호: 로그인하자마자 미리 받아 두어, 메뉴를 열면 기다림 없이 바로 건넨다 */
+var REQPW_P=null;
+function getReqPw(){if(PRACTICE)return Promise.resolve(null);if(!REQPW_P)REQPW_P=api({action:'reqpw'}).then(function(j){if(j&&j.ok&&j.pw)return j.pw;REQPW_P=null;return null;}).catch(function(){REQPW_P=null;return null;});return REQPW_P;}
 function boot(){
   $('#login').classList.add('hide');$('#app').classList.remove('hide');
+  setTimeout(getReqPw,300);
   try{sessionStorage.setItem('lj_admin_in','1');}catch(e){}
   var pf=$('#pf'),tries=0;
   var started=false;
